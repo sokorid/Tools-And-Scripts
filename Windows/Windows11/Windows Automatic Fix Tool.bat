@@ -47,15 +47,15 @@ echo 5.) WINDOWS UPDATE RESET
 echo.
 echo 6.) OPTIONAL Check Drive for errors and dead sectors
 echo.
-echo *SYSMAIN will be disabled due to Windows 11 running slowly because of it.
-echo *SFC will scan your system files for corruption and try to automatically repair them.
-echo *DISM will check your Windows installation image for problems and try to automatically repair it.
-echo *After these two tasks, the script will try to delete all temporary files to speed up your pc.
-echo *After Temp Removal, Windows Update will reset to resolve most Windows Update issues.
-echo *After Windows Update will reset, you will have a choice to run Check Drive to see if there are any 
-echo errors and dead sectors to speed up your drive
-echo *Check Drive It might take 1 hour or up to 2 days. More than that, your Drive is probably failing.
-echo *After all task have completed, Your screen will turn green and you can reboot your PC.
+echo *SYSMAIN will be disabled because it's slowing down Windows 11.
+echo *SFC will scan your system files for corruption and attempt to repair them automatically.
+echo *DISM will check your Windows installation image for problems and attempt to repair it automatically.
+echo *After these two tasks, the script will try to delete all temporary files to speed up your PC.
+echo *After temporary file removal, Windows Update will reset to resolve most update issues.
+echo *After Windows Update resets, you'll have a choice to run Check Drive to look for errors and dead sectors,
+echo which can speed up your drive.
+echo *Check Drive might take anywhere from 1 hour to 2 days. If it takes longer, your drive is likely failing.
+echo *Once all tasks are complete, your screen will turn green, and you can reboot your PC.
 echo.
 @pause
 echo Creating a restore point in case something goes wrong...
@@ -145,8 +145,12 @@ set /p choice=[Y/N]
 
 if %choice%==y goto CheckDrive
 if %choice%==Y goto CheckDrive
+if %choice%==yes goto CheckDrive
+if %choice%==YES goto CheckDrive
 if %choice%==n goto endall
 if %choice%==N goto endall
+if %choice%==no goto endall
+if %choice%==NO goto endall
 
 goto OPTIONAL
 :-------------------------------------
