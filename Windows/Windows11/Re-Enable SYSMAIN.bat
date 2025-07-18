@@ -54,5 +54,7 @@ net start sysmain
 echo.
 echo Done...
 echo.
+echo TASKS COMPLETED SUCCESSFULLY.
+echo.
 @pause
 exit
