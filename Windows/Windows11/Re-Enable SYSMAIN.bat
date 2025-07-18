@@ -44,7 +44,7 @@ echo.
 @pause
 echo Creating a restore point in case something goes wrong...
 echo.
-wmic.exe /Namespace:\\root\default Path SystemRestore Call CreateRestorePoint "<Re-Enable SYSMAIN>", 100, 7
+wmic.exe /Namespace:\\root\default Path SystemRestore Call CreateRestorePoint "<ReEnable SYSMAIN>", 100, 7
 echo.
 echo.
 echo --- Re-Enabling AND Re-Starting SYSMAIN ---
