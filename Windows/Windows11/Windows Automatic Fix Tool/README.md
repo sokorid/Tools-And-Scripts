@@ -64,3 +64,22 @@ YOU WILL BE PROMPTED TO SAY YES OR NO TO THIS, AS IT'S NOT NECESSARY AND WILL TA
 - Check Drive might take anywhere from 1 hour to 2 days. If it takes longer, your drive is likely failing.
 
 - Once all tasks are complete, your screen will turn green, and you can reboot your PC.
+
+## Little More Information
+I know some people, after running the script, may want to re-enable SYSMAIN.
+
+So I made another script to do that.
+
+## INSTRUCTIONS TO Re-Enable SYSMAIN
+1.) Download The Script From
+- https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows11/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat
+
+2.) RUN ReEnable SYSMAIN.bat
+
+3.) READ THE NOTICE
+
+4.) IF YOU DISAGREE WITH THE NOTICE, CLOSE THE WINDOW, OTHERWISE PRESS ANY KEY TO CONTINUE.
+
+5.) THE SCRIPT WILL BEGIN RUNNING AND SET EVERYTHING BACK TO DEFAULT
+
+6.) ONCE YOU SEE IT SAY THIS "TASK COMPLETED SUCCESSFULLY." YOU'RE GOOD TO GO. PRESS ANY KEY TO CLOSE IT
