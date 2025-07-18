@@ -52,9 +52,7 @@ echo.
 sc config sysmain start=auto
 net start sysmain
 echo.
-echo Done...
-echo.
-echo TASKS COMPLETED SUCCESSFULLY.
+echo TASK COMPLETED SUCCESSFULLY.
 echo.
 @pause
 exit
