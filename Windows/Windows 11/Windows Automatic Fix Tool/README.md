@@ -72,7 +72,7 @@ So I made another script to do that.
 
 ## INSTRUCTIONS TO Re-Enable SYSMAIN
 1.) Download The Script From
-- https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows11/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat
+- https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat
 
 2.) RUN ReEnable SYSMAIN.bat
 
