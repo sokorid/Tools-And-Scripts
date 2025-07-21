@@ -16,7 +16,7 @@ USING THIS TOOL. IF YOU DO NOT AGREE, CLOSE THIS WINDOW NOW. USE AT YOUR OWN RIS
 
 ## INSTRUCTIONS
 1.) Download The Script From
-- https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2010/Windows%20Automatic%20Fix%20Tool/Windows%20Automatic%20Fix%20Tool.bat
+[Windows Automatic Fix Tool.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2010/Windows%20Automatic%20Fix%20Tool/Windows%20Automatic%20Fix%20Tool.bat)
 
 2.) RUN Windows Automatic Fix Tool.bat
 
