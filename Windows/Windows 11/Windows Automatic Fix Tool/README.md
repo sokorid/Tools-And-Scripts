@@ -16,7 +16,7 @@ USING THIS TOOL. IF YOU DO NOT AGREE, CLOSE THIS WINDOW NOW. USE AT YOUR OWN RIS
 
 ## INSTRUCTIONS
 1.) Download The Script From
-- [Windows Automatic Fix Tool.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/Windows%20Automatic%20Fix%20Tool.bat)
+[Windows Automatic Fix Tool.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/Windows%20Automatic%20Fix%20Tool.bat)
 
 2.) RUN Windows Automatic Fix Tool.bat
 
@@ -72,7 +72,7 @@ So I made another script to do that.
 
 ## INSTRUCTIONS TO Re-Enable SYSMAIN
 1.) Download The Script From
-- [ReEnable SYSMAIN.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat)
+[ReEnable SYSMAIN.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat)
 
 2.) RUN ReEnable SYSMAIN.bat
 
