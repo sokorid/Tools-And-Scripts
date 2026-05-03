@@ -4,6 +4,9 @@
 # ============================================================
 set -euo pipefail
 
+#the current version of The Script
+SCRIPT_VERSION="4.5"
+
 # Colors and UI
 RED=$(printf '\033[0;31m')
 GREEN=$(printf '\033[0;32m')
@@ -188,7 +191,7 @@ DO_FAIL2BAN="no"
 BACKUP_PATH=""
 
 clear
-echo -e "${BOLD}${CYAN}📦  SSH HARDENING Script v4.5${RESET}"
+echo -e "${BOLD}${CYAN}📦  SSH HARDENING Script v${SCRIPT_VERSION}${RESET}"
 info "Detected user: ${REAL_USER} | IP: ${SERVER_IP}"
 
 # ============================================================
