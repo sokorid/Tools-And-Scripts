@@ -49,15 +49,18 @@ pause_and_clear() {
   echo -e "${BOLD}${GREEN}│${RESET}  ✔  ${BOLD}STAGE COMPLETE!${RESET}                              ${BOLD}${GREEN}│${RESET}"
   echo -e "${BOLD}${GREEN}│${RESET}  ${CYAN}Press any key to move to the next step...${RESET}       ${BOLD}${GREEN}│${RESET}"
   echo -e "${BOLD}${GREEN}└──────────────────────────────────────────────────┘${RESET}"
-  read -n 1 -s -r
-  clear
+  [[ -t 0 ]] && read -n 1 -s -r || true
+  [[ -t 0 ]] && clear
 }
 
 # Function to convert time strings
 convert_to_seconds() {
     local input=$1
-    local unit=$(echo "$input" | grep -o -E '[a-zA-Z]+' | tr '[:upper:]' '[:lower:]')
-    local value=$(echo "$input" | grep -o -E '[0-9]+')
+    local unit
+    local value
+    unit=$(echo "$input" | grep -o -E '[a-zA-Z]+' | tr '[:upper:]' '[:lower:]')
+    value=$(echo "$input" | grep -o -E '[0-9]+')
+    [[ -z "$value" ]] && echo "-1" && return
     case "$unit" in
         d|day|days) echo $((value * 86400)) ;;
         h|hour|hours) echo $((value * 3600)) ;;
@@ -70,7 +73,7 @@ convert_to_seconds() {
 # This ensures stock sshd_config files (which use "#Port 22" style defaults)
 # get cleanly replaced rather than leaving a commented duplicate behind.
 set_ssh_option() {
-    if grep -qE "^#?$1\b" /etc/ssh/sshd_config; then
+    if grep -qE "^#?${1}[[:space:]]" /etc/ssh/sshd_config; then
         sed -i -E "s|^#?($1)\s+.*|$1 $2|" /etc/ssh/sshd_config
     else
         echo "$1 $2" >> /etc/ssh/sshd_config
@@ -94,7 +97,10 @@ ssh_stop() {
 }
 
 ssh_start() {
-    systemctl start "$SSH_SERVICE"
+    if ! systemctl start "$SSH_SERVICE"; then
+        err "Failed to start SSH service!"
+        exit 1
+    fi
     [[ -n "$SSH_SOCKET" ]] && systemctl start "$SSH_SOCKET" > /dev/null 2>&1 || true
 }
 
@@ -125,10 +131,42 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# ============================================================
+#  Ubuntu version check — 26.04 LTS minimum
+# ============================================================
+check_ubuntu_version() {
+    if ! command -v lsb_release &>/dev/null; then
+        err "lsb_release not found. This script requires Ubuntu 26.04 LTS or later."
+        exit 1
+    fi
+
+    local distro
+    distro=$(lsb_release -si)
+    if [[ "$distro" != "Ubuntu" ]]; then
+        err "This script is designed for Ubuntu only. Detected: $distro"
+        exit 1
+    fi
+
+    local version
+    version=$(lsb_release -sr)
+    local major
+    major=$(echo "$version" | cut -d. -f1)
+
+    if [[ "$major" -lt 26 ]]; then
+        err "Ubuntu 26.04 LTS or later is required. Detected: Ubuntu $version"
+        exit 1
+    fi
+
+    ok "Ubuntu $version detected — compatible."
+}
+
+check_ubuntu_version
+
 # Auto-detect Identity
 REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || echo $USER)}"
 CURRENT_HOSTNAME=$(hostname)
-SERVER_IP=$(hostname -I | awk '{print $1}')
+SERVER_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") {print $(i+1); exit}}')
+SERVER_IP="${SERVER_IP:-$(hostname -I | awk '{print $1}')}"
 
 # Snapshot original auth state for exact rollback
 _get_ssh_val() {
@@ -146,8 +184,11 @@ F2B_BANTIME=1h
 F2B_FINDTIME=10m
 DO_FAIL2BAN="no"
 
+
+BACKUP_PATH=""
+
 clear
-echo -e "${BOLD}${CYAN}📦  SSH HARDENING Script v4.0${RESET}"
+echo -e "${BOLD}${CYAN}📦  SSH HARDENING Script v4.5${RESET}"
 info "Detected user: ${REAL_USER} | IP: ${SERVER_IP}"
 
 # ============================================================
@@ -167,11 +208,21 @@ while true; do
     err "Key contains embedded newlines — please paste a single-line key."
     continue
   fi
-  if [[ "$PUBKEY" =~ ^ssh-(rsa|ed25519|ecdsa) ]]; then
-    ok "Key accepted."
+  # Structural prefix check first (fast fail on obvious garbage)
+  if [[ ! "$PUBKEY" =~ ^ssh-(rsa|ed25519|ecdsa) ]]; then
+    err "Invalid format. Key should start with 'ssh-ed25519' or similar."
+    continue
+  fi
+  # Cryptographic validation — write to temp file for cross-version compatibility
+  TMPKEY=$(mktemp)
+  echo "$PUBKEY" > "$TMPKEY"
+  if ssh-keygen -l -f "$TMPKEY" &>/dev/null; then
+    ok "Key accepted and cryptographically validated."
+    rm -f "$TMPKEY"
     break
   else
-    err "Invalid format. Key should start with 'ssh-ed25519' or similar."
+    rm -f "$TMPKEY"
+    err "Key failed validation. It may be truncated or corrupted — please paste it again."
   fi
 done
 
@@ -190,9 +241,18 @@ while true; do
   read -rp "  Enter desired SSH Port [2552]: " SSH_PORT
   SSH_PORT="${SSH_PORT:-2552}"
 
-  if [[ "$SSH_PORT" -lt 1024 || "$SSH_PORT" -gt 65535 ]]; then
-    err "Port must be between 1024 and 65535."
+  if ! [[ "$SSH_PORT" =~ ^[0-9]+$ ]]; then
+    err "Port must be a number."
     continue
+  fi
+
+  if [[ "$SSH_PORT" -gt 65535 ]]; then
+    err "Port must be 65535 or below."
+    continue
+  fi
+  if [[ "$SSH_PORT" -lt 1024 ]]; then
+    warn "Port $SSH_PORT is a well-known/reserved port (< 1024). This may conflict with other services."
+    ask_yes_no "Are you sure you want to use port $SSH_PORT?" "yes/no] [default_no" || continue
   fi
 
   if ss -tulpn | grep -q ":$SSH_PORT "; then
@@ -216,7 +276,7 @@ echo "  - Idle Timeout: Disconnect sessions after 5 minutes of inactivity."
 echo "  - Max Tries: Lock connection after 3 failed attempts."
 echo ""
 
-if ask_yes_no "Apply these high-security defaults?" "y"; then
+if ask_yes_no "Apply these high-security defaults?" "yes/no] [default_yes"; then
   PUBKEY_AUTH=yes; PASS_AUTH=no; ROOT_LOGIN=no; MAX_TRIES=3; GRACE_TIME=30; X11=no; SECONDS_VAL=300; ALIVE_COUNT=2
   ok "Defaults applied."
 else
@@ -224,15 +284,15 @@ else
 
   echo -e "\n${BOLD}Public Key Authentication${RESET}"
   echo "  - (yes: Required for key-based login. Strongly recommended.)"
-  read -rp "  Enable PubkeyAuthentication? (yes/no) [yes]: " PUBKEY_AUTH; PUBKEY_AUTH="${PUBKEY_AUTH:-yes}"
+  read -rp "  Enable PubkeyAuthentication? (yes/no) [default_yes]: " PUBKEY_AUTH; PUBKEY_AUTH="${PUBKEY_AUTH:-yes}"
 
   echo -e "\n${BOLD}Password Authentication${RESET}"
   echo "  - (no: Requires SSH keys. Prevents brute-force guessing.)"
-  read -rp "  Allow Password Auth? (yes/no) [no]: " PASS_AUTH; PASS_AUTH="${PASS_AUTH:-no}"
+  read -rp "  Allow Password Auth? (yes/no) [default_no]: " PASS_AUTH; PASS_AUTH="${PASS_AUTH:-no}"
 
   echo -e "\n${BOLD}Root Login${RESET}"
   echo "  - (no: Attacker can't target 'root' directly. Much safer.)"
-  read -rp "  Allow Root Login? (yes/no) [no]: " ROOT_LOGIN; ROOT_LOGIN="${ROOT_LOGIN:-no}"
+  read -rp "  Allow Root Login? (yes/no) [default_no]: " ROOT_LOGIN; ROOT_LOGIN="${ROOT_LOGIN:-no}"
 
   echo -e "\n${BOLD}Max Auth Tries${RESET}"
   echo "  - (Number of failed attempts before being kicked.)"
@@ -244,7 +304,7 @@ else
 
   echo -e "\n${BOLD}X11 Forwarding${RESET}"
   echo "  - (Forwarding GUI apps. Usually leave as 'no' for servers.)"
-  read -rp "  X11 Forwarding [no]: " X11; X11="${X11:-no}"
+  read -rp "  X11 Forwarding (yes/no) [default_no]: " X11; X11="${X11:-no}"
 
   echo -e "\n${BOLD}Idle Timeout Setup${RESET}"
   echo "  Default is 5 minutes (300s). Format: '15m', '1h', or '300s'."
@@ -275,12 +335,12 @@ echo "  - Ban Time (1h): Offenders are locked out for 1 hour."
 echo "  - Find Time (10m): Failures must happen within 10 mins to trigger ban."
 echo ""
 
-if ask_yes_no "Install and use Fail2Ban defaults?" "y"; then
+if ask_yes_no "Install and use Fail2Ban defaults?" "yes/no] [default_yes"; then
   F2B_MAXRETRY=5; F2B_BANTIME=1h; F2B_FINDTIME=10m
   DO_FAIL2BAN="yes"
   ok "Fail2Ban defaults selected."
 else
-  if ask_yes_no "Manually configure Fail2Ban?" "y"; then
+  if ask_yes_no "Manually configure Fail2Ban?" "yes/no] [default_yes"; then
     echo -e "\n${BOLD}Max Retry${RESET}"
     echo "  - (Attempts allowed before an IP is banned.)"
     read -rp "  Max Retry [5]: " F2B_MAXRETRY; F2B_MAXRETRY="${F2B_MAXRETRY:-5}"
@@ -311,7 +371,7 @@ printf "  open port (like your SSH port), they will know you are there.\n"
 printf "  This is simply an ${CYAN}added layer${RESET} of obscurity to slow them down.\n"
 printf "  ${YELLOW}Note:${RESET} You won't be able to ping this server to test uptime.\n\n"
 
-if ask_yes_no "Disallow pinging of the server (Stealth Mode)?" "n"; then
+if ask_yes_no "Disallow pinging of the server (Stealth Mode)?" "yes/no] [default_no"; then
     DO_STEALTH="yes"
     set_icmp_stealth
 else
@@ -361,8 +421,10 @@ chmod 600 "$USER_HOME/.ssh/authorized_keys"
 # Firewall
 info "Updating UFW rules..."
 ufw allow "$SSH_PORT/tcp" > /dev/null
-ufw delete allow 22/tcp > /dev/null 2>&1 || true
-info "Removed old port 22 rule from firewall (if it existed)."
+if [[ "$SSH_PORT" != "22" ]]; then
+    ufw delete allow 22/tcp > /dev/null 2>&1 || true
+    info "Removed old port 22 rule from firewall."
+fi
 ufw --force enable > /dev/null
 
 # Apply stealth mode and reload UFW now that all rules are in place
@@ -373,7 +435,7 @@ fi
 # Fail2Ban
 if [[ "$DO_FAIL2BAN" == "yes" ]]; then
   info "Installing Fail2Ban..."
-  apt-get update -qq && apt-get install -y fail2ban -qq
+  apt-get update -qq && apt-get install -y fail2ban -qq > /dev/null 2>&1
   cat > /etc/fail2ban/jail.local << EOF
 [sshd]
 enabled = true
@@ -381,9 +443,10 @@ port = ${SSH_PORT}
 maxretry = ${F2B_MAXRETRY}
 bantime = ${F2B_BANTIME}
 findtime = ${F2B_FINDTIME}
+backend  = systemd
 EOF
   systemctl enable fail2ban > /dev/null 2>&1
-  systemctl restart fail2ban
+  systemctl restart fail2ban > /dev/null 2>&1
 fi
 
 info "Validating SSH config syntax..."
@@ -453,7 +516,7 @@ printf "${BOLD}${GREEN}═══════════════════
 #  STAGE 9 — Final Confirmation & Automated Recovery
 # ============================================================
 echo ""
-if ask_yes_no "Did the connection test work successfully?" "y"; then
+if ask_yes_no "Did the connection test work successfully?" "yes/no] [default_yes"; then
     printf "\n${BOLD}${GREEN}🎉  Excellent! System hardened and verified.${RESET}\n"
     printf "  Your backup remains at: ${YELLOW}${BACKUP_PATH}${RESET}\n"
     printf "  Exiting safely...\n\n"
@@ -542,20 +605,20 @@ EOF
     printf "  PermitRootLogin:      ${CYAN}${ORIG_ROOT_LOGIN:-not set}${RESET}\n"
     echo ""
 
-    if ask_yes_no "Manually override recovery settings? (No = restore pre-script values)" "n"; then
+    if ask_yes_no "Manually override recovery settings? (No = restore pre-script values)" "yes/no] [default_no"; then
         echo ""
         printf "  ${CYAN}Leave blank to accept the shown default.${RESET}\n\n"
 
         read -rp "  Port [22]: " RB_PORT
         RB_PORT="${RB_PORT:-22}"
 
-        read -rp "  PubkeyAuthentication (yes/no) [no]: " RB_PUBKEY
+        read -rp "  PubkeyAuthentication (yes/no) [default_no]: " RB_PUBKEY
         RB_PUBKEY="${RB_PUBKEY:-no}"
 
-        read -rp "  PasswordAuthentication (yes/no) [yes]: " RB_PASS
+        read -rp "  PasswordAuthentication (yes/no) [default_yes]: " RB_PASS
         RB_PASS="${RB_PASS:-yes}"
 
-        read -rp "  PermitRootLogin (yes/no) [yes]: " RB_ROOT
+        read -rp "  PermitRootLogin (yes/no) [default_yes]: " RB_ROOT
         RB_ROOT="${RB_ROOT:-yes}"
 
         RESTORE_PORT="$RB_PORT"
