@@ -2,11 +2,10 @@
 # ============================================================
 #  Auto_Setup_Ubuntu_Server.sh — Initial server setup
 # ============================================================
-
 set -euo pipefail
 
 #the current version of The Script
-SCRIPT_VERSION="3.2"
+SCRIPT_VERSION="4.4"
 
 # Colors and UI
 RED=$(printf '\033[0;31m')
@@ -15,6 +14,11 @@ YELLOW=$(printf '\033[1;33m')
 CYAN=$(printf '\033[0;36m')
 BOLD=$(printf '\033[1m')
 RESET=$(printf '\033[0m')
+
+# Check if the terminal is "dumb" or non-interactive
+if [[ ! -t 1 ]] || [[ "$TERM" == "dumb" ]]; then
+    RED=''; GREEN=''; YELLOW=''; CYAN=''; BOLD=''; RESET=''
+fi
 
 info()    { printf "  ${CYAN}ℹ️${RESET}  %s\n" "$1"; }
 success() { printf "  ${GREEN}✅${RESET} %s\n" "$1"; }
@@ -118,9 +122,49 @@ clear
 # ════════════════════════════════════════════════════════════
 echo -e "${BOLD}${CYAN}📦  Auto Setup Ubuntu Server Script v${SCRIPT_VERSION}${RESET}"
 header "🖥️  Step 1 — System Update"
+
 info "Checking for updates..."
-apt-get update > /dev/null 2>&1 || true && apt-get upgrade -y > /dev/null 2>&1 || true
-success "System is up to date."
+if apt-get update > /dev/null 2>&1; then
+    success "Package lists refreshed."
+else
+    error "Failed to fetch package lists — check your internet connection."
+    exit 1
+fi
+
+info "Installing updates — this may take a few minutes..."
+echo -e "  ${CYAN}(Running in the background, please wait)${RESET}"
+echo ""
+
+FAILED_PKGS=()
+while IFS= read -r line; do
+    if [[ "$line" =~ ^Get: ]]; then
+        pkg=$(echo "$line" | awk '{print $NF}')
+        printf "  ${CYAN}↓ Downloading:${RESET} %s\n" "$pkg"
+    elif [[ "$line" =~ ^Unpacking|^Setting\ up ]]; then
+        pkg=$(echo "$line" | awk '{print $2}')
+        printf "  ${GREEN}✔ Installing:${RESET}  %s\n" "$pkg"
+    elif [[ "$line" =~ ^[Ee]rr:|^[Ee]rror ]]; then
+        FAILED_PKGS+=("$line")
+        printf "  ${RED}✘ Error:${RESET}       %s\n" "$line"
+    fi
+done < <(apt-get upgrade -y 2>&1)
+
+echo ""
+if [[ ${#FAILED_PKGS[@]} -gt 0 ]]; then
+    warn "${#FAILED_PKGS[@]} package(s) had errors during upgrade:"
+    for pkg in "${FAILED_PKGS[@]}"; do
+        echo -e "  ${RED}•${RESET} $pkg"
+    done
+    warn "The system may be partially updated — review the errors above before continuing."
+    echo ""
+    if ! ask_yes_no "$(echo -e "${YELLOW}Continue anyway?${RESET}")" "yes/no"; then
+        error "Aborted by user."
+        exit 1
+    fi
+else
+    success "System is up to date."
+fi
+
 pause_and_clear
 
 # ════════════════════════════════════════════════════════════
@@ -324,10 +368,12 @@ else
     netplan apply
 fi
 
+CURRENT_USER="${SUDO_USER:-$(whoami)}"
+
 echo ""
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 warn "  Network config applied. If your SSH session dropped,"
-warn "  reconnect using: ssh user@${STATIC_IP}"
+warn "  reconnect using: ssh ${CURRENT_USER}@${STATIC_IP}"
 warn "  Your new static IP is permanently set to: ${STATIC_IP}/${PREFIX}"
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
@@ -462,43 +508,54 @@ AUTOCONF
     echo -e "  You can allow the system to reboot automatically at a scheduled time"
     echo -e "  so patches are fully applied without manual intervention.${RESET}"
     echo ""
-
     if ask_yes_no "$(echo -e "${BOLD}Configure automatic reboots after updates?${RESET}")" "yes/no"; then
         UPGRADES_CONF="/etc/apt/apt.conf.d/50unattended-upgrades"
         if [[ -f "$UPGRADES_CONF" ]]; then
             info "Backing up ${UPGRADES_CONF} before making changes..."
             cp "$UPGRADES_CONF" "${UPGRADES_CONF}.$(date +%Y%m%d_%H%M%S).bak"
-            echo ""
-            echo -e "  ${CYAN}Choose how you would like to enter the reboot time:${RESET}"
-            echo ""
-            echo "  1) 24-hour format (e.g. 04:00, 16:30)"
-            echo "  2) 12-hour format (e.g. 4:00 AM, 2:30 PM)"
-            echo ""
-            read -rp "$(echo -e "${BOLD}Select format [1-2]: ${RESET}")" TIME_FORMAT
 
-            if [[ "$TIME_FORMAT" == "2" ]]; then
-                echo -e "  ${CYAN}Enter the time in 12-hour format, including AM or PM (e.g. 2:00 AM).${RESET}"
-                read -rp "  Enter time: " RAW_TIME
-                REBOOT_TIME=$(date -d "$RAW_TIME" +"%H:%M" 2>/dev/null || echo "INVALID")
-            else
-                echo -e "  ${CYAN}Enter the time in 24-hour format (e.g. 04:00 for 4 AM, 16:30 for 4:30 PM)."
-                echo -e "  Choose a time when the server is least likely to be in active use.${RESET}"
-                read -rp "  Enter time [04:00]: " REBOOT_TIME
-                REBOOT_TIME="${REBOOT_TIME:-04:00}"
-                if ! [[ "$REBOOT_TIME" =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
-                    REBOOT_TIME="INVALID"
+            while true; do
+                echo ""
+                echo -e "  ${CYAN}Choose how you would like to enter the reboot time:${RESET}"
+                echo ""
+                echo "  1) 24-hour format (e.g. 04:00, 16:30)"
+                echo "  2) 12-hour format (e.g. 4:00 AM, 2:30 PM)"
+                echo ""
+                read -rp "$(echo -e "${BOLD}Select format [1-2]: ${RESET}")" TIME_FORMAT
+
+                if [[ "$TIME_FORMAT" == "2" ]]; then
+                    echo -e "  ${CYAN}Enter the time in 12-hour format, including AM or PM (e.g. 2:00 AM, 2AM).${RESET}"
+                    read -rp "  Enter time: " RAW_TIME
+                    REBOOT_TIME=$(date -d "$RAW_TIME" +"%H:%M" 2>/dev/null || echo "INVALID")
+                    if ! [[ "$RAW_TIME" =~ ^(1[0-2]|0?[1-9])(:[0-5][0-9])?[[:space:]]*(AM|PM|am|pm)$ ]]; then
+                        REBOOT_TIME="INVALID"
+                    else
+                        REBOOT_TIME=$(date -d "$RAW_TIME" +"%H:%M" 2>/dev/null || echo "INVALID")
+                    fi
+                elif [[ "$TIME_FORMAT" == "1" ]]; then
+                    echo -e "  ${CYAN}Enter the time in 24-hour format (e.g. 04:00 for 4 AM, 16:30 for 4:30 PM)."
+                    echo -e "  Choose a time when the server is least likely to be in active use.${RESET}"
+                    read -rp "  Enter time [04:00]: " REBOOT_TIME
+                    REBOOT_TIME="${REBOOT_TIME:-04:00}"
+                    if ! [[ "$REBOOT_TIME" =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
+                        REBOOT_TIME="INVALID"
+                    fi
+                else
+                    warn "Invalid choice — please enter 1 or 2."
+                    continue
                 fi
-            fi
 
-            if [[ "$REBOOT_TIME" == "INVALID" ]]; then
-                error "Could not parse the time entered. Falling back to default of 04:00."
-                REBOOT_TIME="04:00"
-            fi
+                if [[ "$REBOOT_TIME" == "INVALID" ]]; then
+                    error "Could not parse that time — please try again."
+                    continue
+                fi
+
+                break
+            done
 
             sed -i '/Unattended-Upgrade::Automatic-Reboot/d' "$UPGRADES_CONF"
             echo "Unattended-Upgrade::Automatic-Reboot \"true\";" >> "$UPGRADES_CONF"
             echo "Unattended-Upgrade::Automatic-Reboot-Time \"${REBOOT_TIME}\";" >> "$UPGRADES_CONF"
-
             FRIENDLY_CONFIRM=$(date -d "$REBOOT_TIME" +"%I:%M %p")
             success "Auto-reboot scheduled daily at ${REBOOT_TIME} (${FRIENDLY_CONFIRM}) if updates require it."
         else
@@ -512,11 +569,16 @@ AUTOCONF
     echo ""
     info "Running a dry-run to verify the unattended-upgrades configuration..."
     echo -e "  ${CYAN}This simulates an update run without actually installing anything."
-    echo -e "  The last 7 lines of output are shown below for review.${RESET}"
     echo ""
-    unattended-upgrade --dry-run --debug 2>&1 | tail -7
+    unattended-upgrade --dry-run --debug > /dev/null 2>&1
+    DRY_RUN_EXIT="${PIPESTATUS[0]}"
     echo ""
-    success "Verification complete — automatic updates are configured and working."
+    if [[ $? -eq 0 ]]; then
+        success "Verification complete — automatic updates are configured and working."
+    else
+        warn "Dry-run exited with an error — automatic updates may not be configured correctly."
+        info "You can investigate by running: sudo unattended-upgrade --dry-run --debug"
+    fi
 else
     info "Skipping automatic updates — you can enable this later by running:"
     echo -e "  ${BOLD}sudo apt-get install unattended-upgrades${RESET}"
@@ -527,7 +589,6 @@ pause_and_clear
 # ════════════════════════════════════════════════════════════
 #  Finish
 # ════════════════════════════════════════════════════════════
-CURRENT_USER="${SUDO_USER:-$(whoami)}"
 CURRENT_HOSTNAME=$(hostname)
 
 echo -e "\n${BOLD}${GREEN}════════════════════════════════════════════════════════${RESET}"
