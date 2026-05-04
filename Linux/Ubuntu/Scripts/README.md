@@ -13,9 +13,9 @@
 
 | Script | Description |
 |--------|-------------|
-| [⚙️ Auto_Setup_Ubuntu_Server](#-auto_setup_ubuntu_server) | Initial server setup — updates, static IP, timezone & more |
-| [🔒 SSH_Hardening_Script](#-ssh_hardening_script) | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
-| [🌐 Clear_Port_53](clear-port-53) | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
+| [⚙️ Auto_Setup_Ubuntu_Server](#Auto_Setup_Ubuntu_Server) | Initial server setup — updates, static IP, timezone & more |
+| [🔒 SSH_Hardening_Script](#SSH_Hardening_Script) | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
+| [🌐 Clear_Port_53](#clear-port-53) | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
 
 ---
 
@@ -49,8 +49,6 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 **[⬆ Back to Script Overview](#-script-overview)**
 </details>
 
----
-
 <details id="SSH_Hardening_Script">
 <summary>🔒 SSH_Hardening_Script</summary>
 
@@ -76,8 +74,6 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 
 **[⬆ Back to Script Overview](#-script-overview)**
 </details>
-
----
 
 <details id="clear-port-53">
 <summary>🌐 Clear_Port_53</summary>
