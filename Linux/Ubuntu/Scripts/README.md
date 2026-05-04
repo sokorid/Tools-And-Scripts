@@ -4,7 +4,8 @@
 ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 ![Shell](https://img.shields.io/badge/Shell-Bash-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white)
 
-> ⚠️ **Heads up:** All scripts have only been tested on Ubuntu **26.04**. Any version below or above may not be compatible.
+> [!CAUTION]
+> **Compatibility:** These scripts are strictly verified for **Ubuntu 26.04**. Use on other versions at your own risk.
 
 ---
 
@@ -12,9 +13,9 @@
 
 | Script | Description |
 |--------|-------------|
-| [Auto_Setup_Ubuntu_Server](#-auto_setup_ubuntu_server) | Initial server setup — updates, static IP, timezone & more |
-| [SSH_Hardening_Script](#-ssh_hardening_script) | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
-| [Clear_Port_53](#-clear_port_53) | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
+| [⚙️ Auto_Setup_Ubuntu_Server](#-auto_setup_ubuntu_server) | Initial server setup — updates, static IP, timezone & more |
+| [🔒 SSH_Hardening_Script](#-ssh_hardening_script) | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
+| [🌐 Clear_Port_53](#clear-port-53) | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
 
 ---
 
@@ -22,7 +23,7 @@
 
 ---
 
-<details>
+<details id="Auto_Setup_Ubuntu_Server">
 <summary>⚙️ Auto_Setup_Ubuntu_Server</summary>
 
 <br>
@@ -44,11 +45,13 @@
 sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Linux/Ubuntu/Scripts/Auto_Setup_Ubuntu_Server.sh)"
 ```
 
+
+**[⬆ Back to Script Overview](#-script-overview)**
 </details>
 
 ---
 
-<details>
+<details id="SSH_Hardening_Script">
 <summary>🔒 SSH_Hardening_Script</summary>
 
 <br>
@@ -71,11 +74,12 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Linux/Ubuntu/Scripts/SSH_Hardening_Script.sh)"
 ```
 
+**[⬆ Back to Script Overview](#-script-overview)**
 </details>
 
 ---
 
-<details>
+<details id="clear-port-53">
 <summary>🌐 Clear_Port_53</summary>
 
 <br>
@@ -94,4 +98,5 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Linux/Ubuntu/Scripts/Clear_Port_53.sh)"
 ```
 
+**[⬆ Back to Script Overview](#-script-overview)**
 </details>
