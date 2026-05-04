@@ -47,6 +47,8 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 
 
 **[⬆ Back to Script Overview](#-script-overview)**
+
+---
 </details>
 
 <details id="SSH_Hardening_Script">
@@ -73,6 +75,8 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 ```
 
 **[⬆ Back to Script Overview](#-script-overview)**
+
+---
 </details>
 
 <details id="clear-port-53">
@@ -95,4 +99,6 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 ```
 
 **[⬆ Back to Script Overview](#-script-overview)**
+
+---
 </details>
