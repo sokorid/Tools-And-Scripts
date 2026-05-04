@@ -5,7 +5,7 @@
 set -euo pipefail
 
 #the current version of The Script
-SCRIPT_VERSION="4.5"
+SCRIPT_VERSION="4.6"
 
 # Colors and UI
 RED=$(printf '\033[0;31m')
@@ -135,34 +135,50 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # ============================================================
-#  Ubuntu version check — 26.04 LTS minimum
+#  Ubuntu version check — minimum 18.04, tested on 26.04 LTS
 # ============================================================
 check_ubuntu_version() {
     if ! command -v lsb_release &>/dev/null; then
-        err "lsb_release not found. This script requires Ubuntu 26.04 LTS or later."
+        error "lsb_release not found. This script requires Ubuntu 18.04 LTS or later."
         exit 1
     fi
-
     local distro
     distro=$(lsb_release -si)
     if [[ "$distro" != "Ubuntu" ]]; then
-        err "This script is designed for Ubuntu only. Detected: $distro"
+        error "This script is designed for Ubuntu only. Detected: $distro"
         exit 1
     fi
-
-    local version
+    local version major minor tested_major tested_minor
     version=$(lsb_release -sr)
-    local major
     major=$(echo "$version" | cut -d. -f1)
+    minor=$(echo "$version" | cut -d. -f2)
+    tested_major=26
+    tested_minor=04
 
-    if [[ "$major" -lt 26 ]]; then
-        err "Ubuntu 26.04 LTS or later is required. Detected: Ubuntu $version"
+    # Below minimum — hard stop, script will not continue
+    if [[ "$major" -lt 18 ]]; then
+        error "Ubuntu 18.04 or later is required. Detected: Ubuntu $version"
+        error "This script cannot run on your version. Exiting."
         exit 1
     fi
 
-    ok "Ubuntu $version detected — compatible."
+    # Below tested version — warn and prompt
+    if [[ "$major" -lt "$tested_major" ]] || \
+       { [[ "$major" -eq "$tested_major" ]] && [[ "$minor" -lt "$tested_minor" ]]; }; then
+        echo ""
+        echo "⚠️  WARNING: This script has only been tested on Ubuntu ${tested_major}.${tested_minor}."
+        echo "   You are running Ubuntu $version."
+        echo "   Continuing may produce unexpected results."
+        echo ""
+        if ! ask_yes_no "Do you want to continue at your own risk?" "yes/no"; then
+            error "Aborting."
+            exit 1
+        fi
+        success "Ubuntu $version detected — continuing at user's risk."
+    else
+        success "Ubuntu $version detected — compatible."
+    fi
 }
-
 check_ubuntu_version
 
 # Auto-detect Identity
