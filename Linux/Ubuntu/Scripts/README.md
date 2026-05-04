@@ -13,9 +13,9 @@
 
 | Script | Description |
 |--------|-------------|
-| [⚙️ Auto_Setup_Ubuntu_Server] | Initial server setup — updates, static IP, timezone & more |
-| [🔒 SSH_Hardening_Script] | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
-| [🌐 Clear_Port_53] | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
+| ⚙️ Auto_Setup_Ubuntu_Server | Initial server setup — updates, static IP, timezone & more |
+| 🔒 SSH_Hardening_Script | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
+| 🌐 Clear_Port_53 | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
 
 ---
 
