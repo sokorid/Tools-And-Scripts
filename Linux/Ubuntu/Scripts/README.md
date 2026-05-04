@@ -25,8 +25,8 @@
 
 <details>
 <summary>⚙️ Auto_Setup_Ubuntu_Server</summary>
-<a name="Auto_Setup_Ubuntu_Server"></a>
 
+#### ⚙️ Auto_Setup_Ubuntu_Server
 <br>
 
 `Auto_Setup_Ubuntu_Server.sh` handles the heavy lifting for your initial system setup.
