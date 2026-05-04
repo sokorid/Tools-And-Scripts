@@ -25,7 +25,7 @@
 
 <details>
 <summary>⚙️ Auto_Setup_Ubuntu_Server</summary>
-<a name="Auto_Setup_Ubuntu_Servert"></a>
+<a name="Auto_Setup_Ubuntu_Server"></a>
 
 <br>
 
