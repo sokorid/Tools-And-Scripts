@@ -15,6 +15,7 @@
 |--------|-------------|
 | 🚀 Open_SSH | Standard SSH connection launcher for default Port 22 |
 | 🔌 Open_SSH_Port | SSH launcher for servers using custom ports |
+| 🔒 SSH_Key_Generator | Quickly generates Ed25519 or RSA keys for your servers |
 
 ---
 
@@ -62,6 +63,31 @@
 1. Right-click the file and select **Edit**.
 2. Change `port` to your custom number (e.g., `2222`).
 3. Replace `UserName@IPAddress` with your login info.
+
+**[⬆ Back to Overview](#-script-overview)**
+
+---
+</details>
+
+<details>
+<summary>🔒 SSH_Key_Generator</summary>
+
+<br>
+
+`SSH_Key_Generator.bat` automates the creation of secure SSH keys without needing to remember complex `ssh-keygen` flags.
+
+| Feature | Details |
+|--------|---------|
+| 🔐 Ed25519 Support | Generates modern, high-security elliptic curve keys |
+| 🔐 RSA 4096 Support | Older standard, Use if Ed25519 is unsupported |
+| 📂 Auto-Saving | Places keys directly into your `user/.ssh` folder |
+
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat)
+
+**⚡ How to use:**
+1. Download the `.bat` file.
+2. Run it as a normal user (no Admin required for SSH keys).
+3. Follow the prompts to name your key.
 
 **[⬆ Back to Overview](#-script-overview)**
 
