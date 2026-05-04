@@ -15,7 +15,7 @@
 |--------|-------------|
 | [⚙️ Auto_Setup_Ubuntu_Server](#-auto_setup_ubuntu_server) | Initial server setup — updates, static IP, timezone & more |
 | [🔒 SSH_Hardening_Script](#-ssh_hardening_script) | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
-| [🌐 Clear_Port_53](#clear-port-53) | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
+| [🌐 Clear_Port_53](clear-port-53) | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
 
 ---
 
