@@ -1,85 +1,49 @@
-## Windows Automatic Fix Tool
+# 🛠️ Windows Automatic Fix Tool
 
+![Platform](https://img.shields.io/badge/OS-Windows%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Stable-success?style=for-the-badge)
 
-## NOTICE
+> [!WARNING]
+> **LEGAL NOTICE & DISCLAIMER**
+> This open-source tool is designed to automate common tasks used by IT professionals and PC repair services. 
+> 
+> This script only runs commands built into Windows; no third-party applications or tools are used. By using this tool, you agree that **sokor** cannot be held liable for any damage caused. If you do not agree, close the script window immediately. **Use at your own risk.**
 
-NOTICE: THIS OPEN SOURCE TOOL IS A SCRIPT DESIGNED TO AUTOMATE COMMON TASKS USED BY IT PROFESSIONALS
+---
 
-AND PC REPAIR SERVICES. THIS SCRIPT ONLY RUNS COMMANDS BUILT INTO WINDOWS. NO THIRD PARTY APPLICATIONS
+## 📋 Tool Overview
 
-OR TOOLS ARE USED BY THIS SCRIPT. THIS SCRIPT WAS DESIGNED TO SIMPLIFY THESE TASKS FOR THE EVERY DAY
+This utility automates system maintenance to resolve common performance issues and update errors.
 
-USER. BY USING THIS TOOL YOU AGREE THAT sokor CANNOT BE HELD LIABLE FOR ANY DAMAGE CAUSED BY
+| Task | Description |
+| :--- | :--- |
+| **🚫 Disable SysMain** | Stops SysMain to prevent background disk thrashing and slowdowns |
+| **🔍 SFC Scan** | Runs System File Checker to repair corrupted OS files |
+| **🛠️ DISM Repair** | Services the Windows Image to fix deep-level system corruption |
+| **🧹 Temp Cleanup** | Purges temporary files to reclaim space and speed up the OS |
+| **🔄 Update Reset** | Resets Windows Update components to fix stuck downloads |
+| **💾 Disk Check** | (Optional) Scans for drive errors and dead sectors (requires reboot) |
 
-USING THIS TOOL. IF YOU DO NOT AGREE, CLOSE THIS WINDOW NOW. USE AT YOUR OWN RISK.
+---
 
+## 📜 Instructions
 
-## INSTRUCTIONS
-1.) Download The Script From
-[Windows Automatic Fix Tool.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/Windows%20Automatic%20Fix%20Tool.bat)
+1. **Download:** [Windows Automatic Fix Tool.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/Windows%20Automatic%20Fix%20Tool.bat)
+2. **Run:** Right-click the `.bat` file and **Run as Administrator**.
+3. **Accept Notice:** Read the on-screen disclaimer. Press any key to continue or close the window to cancel.
+4. **Completion:** When the window turns **GREEN**, the tasks are finished.
+5. **Optional Scan:** Choose `Y` or `N` for the Disk Check. *Note: This can take 1 hour to 2 days depending on drive health.*
+6. **Final Step:** Reboot your PC.
 
-2.) RUN Windows Automatic Fix Tool.bat
+---
 
-3.) READ THE NOTICE
+## 🔄 Re-Enable SysMain
 
-4.) IF YOU DISAGREE WITH THE NOTICE, CLOSE THE WINDOW, OTHERWISE PRESS ANY KEY TO CONTINUE.
+If you prefer to have SysMain running after the fix is complete, use this secondary script to restore default settings.
 
-5.) THE TOOL WILL BEGIN RUNNING THE TASKS LISTED AND EXPLAINED BELOW.
+**Instructions:**
+1. **Download:** [ReEnable SYSMAIN.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat)
+2. **Run:** Execute the script and follow the on-screen prompts.
+3. **Success:** Once you see `"TASK COMPLETED SUCCESSFULLY"`, the service is restored.
 
-6.) AT THE END OF THE SCRIPT, THERE WILL BE AN OPTIONAL CHECK DRIVE FOR ERRORS AND DEAD SECTORS.
-
-YOU WILL BE PROMPTED TO SAY YES OR NO TO THIS, AS IT'S NOT NECESSARY AND WILL TAKE SOME TIME AFTER THE REBOOT.
-
-7.) WINDOW COLOR CHANGES TO GREEN MEANS THAT ALL OF THE TASKS COMPLETED SUCCESSFULLY.
-
-8.) REBOOT YOUR PC
-
-
-## This tool will attempt to fix common Windows issues by running these Windows tasks:
-
-1.) DISABLED SYSMAIN
-
-2.) SYSTEM FILE CHECKER
-
-3.) DEPLOYMENT IMAGE SERVICING AND MANAGEMENT TOOL
-
-4.) TEMP FILE REMOVAL
-
-5.) WINDOWS UPDATE RESET
-
-6.) OPTIONAL Check Drive for errors and dead sectors
-
-- SYSMAIN will be disabled because it's slowing down Windows 11.
-
-- SFC will scan your system files for corruption and attempt to repair them automatically.
-
-- DISM will check your Windows installation image for problems and attempt to repair it automatically.
-
-- After these two tasks, the script will try to delete all temporary files to speed up your PC.
-
-- After temporary file removal, Windows Update will reset to resolve most update issues.
-
-- After Windows Update resets, you'll have a choice to run Check Drive to look for errors and dead sectors, which can speed up your drive.
-
-- Check Drive might take anywhere from 1 hour to 2 days. If it takes longer, your drive is likely failing.
-
-- Once all tasks are complete, your screen will turn green, and you can reboot your PC.
-
-## Little More Information
-I know some people, after running the script, may want to re-enable SYSMAIN.
-
-So I made another script to do that.
-
-## INSTRUCTIONS TO Re-Enable SYSMAIN
-1.) Download The Script From
-[ReEnable SYSMAIN.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat)
-
-2.) RUN ReEnable SYSMAIN.bat
-
-3.) READ THE NOTICE
-
-4.) IF YOU DISAGREE WITH THE NOTICE, CLOSE THE WINDOW, OTHERWISE PRESS ANY KEY TO CONTINUE.
-
-5.) THE SCRIPT WILL BEGIN RUNNING AND SET EVERYTHING BACK TO DEFAULT
-
-6.) ONCE YOU SEE IT SAY THIS "TASK COMPLETED SUCCESSFULLY." YOU'RE GOOD TO GO. PRESS ANY KEY TO CLOSE IT
+[⬆ Back to Top](#️-windows-automatic-fix-tool)
