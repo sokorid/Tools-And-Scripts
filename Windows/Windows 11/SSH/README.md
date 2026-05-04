@@ -13,8 +13,8 @@
 
 | Script | Description |
 |--------|-------------|
-| 🚀 [Open_SSH](#-open_ssh) | Standard SSH connection launcher for default Port 22 |
-| 🔌 [Open_SSH_Port](#-open_ssh_port) | SSH launcher for servers using custom ports |
+| 🚀 Open_SSH | Standard SSH connection launcher for default Port 22 |
+| 🔌 Open_SSH_Port | SSH launcher for servers using custom ports |
 
 ---
 
