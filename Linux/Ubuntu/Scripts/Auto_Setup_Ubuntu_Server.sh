@@ -12,7 +12,7 @@
 set -euo pipefail
 
 #the current version of The Script
-SCRIPT_VERSION="4.5"
+SCRIPT_VERSION="4.6"
 
 # Colors and UI
 RED=$(printf '\033[0;31m')
