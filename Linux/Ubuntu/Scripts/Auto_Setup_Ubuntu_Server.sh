@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 # ============================================================
+# Author:  sokor
+# GitHub:  https://github.com/sokorid
+# License: MIT (https://opensource.org/licenses/MIT)
+# Notice:  Provided "as is", without warranty of any kind.
+# ============================================================
+
+# ============================================================
 #  Auto_Setup_Ubuntu_Server.sh — Initial server setup
 # ============================================================
 set -euo pipefail
