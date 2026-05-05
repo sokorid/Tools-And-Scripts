@@ -1,5 +1,12 @@
 #!/bin/bash
 # ============================================================
+# Author:  sokor
+# GitHub:  https://github.com/sokorid
+# License: MIT (https://opensource.org/licenses/MIT)
+# Notice:  Provided "as is", without warranty of any kind.
+# ============================================================
+
+# ============================================================
 #  SSH_Hardening_Script.sh — The Automatic Setup Script
 # ============================================================
 set -euo pipefail
