@@ -1,5 +1,15 @@
 @echo off
 title SSH Key Generator
+:: ============================================================
+:: Author:  sokor
+:: GitHub:  https://github.com/sokorid
+:: License: MIT (https://opensource.org/licenses/MIT)
+:: Notice:  Provided "as is", without warranty of any kind.
+:: ============================================================
+
+:: =================================================================================
+::  SSH_Key_Generator.bat — Quickly generates Ed25519 or RSA keys for your servers
+:: =================================================================================
 
 :: ============================================================
 ::  HEADER
