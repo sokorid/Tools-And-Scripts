@@ -8,6 +8,7 @@
 
 # ==================================================================
 #  Clear_Port_53.sh — resolves port conflicts by disabling port 53
+#  SCRIPT_VERSION_1.0
 # ==================================================================
 set -euo pipefail
 
