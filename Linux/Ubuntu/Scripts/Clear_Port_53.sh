@@ -1,4 +1,14 @@
 #!/bin/bash
+# ============================================================
+# Author:  sokor
+# GitHub:  https://github.com/sokorid
+# License: MIT (https://opensource.org/licenses/MIT)
+# Notice:  Provided "as is", without warranty of any kind.
+# ============================================================
+
+# ==================================================================
+#  Clear_Port_53.sh — resolves port conflicts by disabling port 53
+# ==================================================================
 set -euo pipefail
 
 RC="/etc/resolv.conf"
