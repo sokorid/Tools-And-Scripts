@@ -18,7 +18,7 @@ color f
 :main_menu
 cls
 echo.
-echo           SSH KEY Generator Script v1.6
+echo           SSH KEY Generator Script v1.7
 echo.
 echo  =====================================================
 echo    SSH Key Generator
@@ -133,6 +133,8 @@ echo.
 echo    Custom names are saved in the same .ssh folder.
 echo    Example: my_server  -^>  %USERPROFILE%\.ssh\my_server
 echo.
+echo    Type "back" or "exit" to return to the main menu.
+echo.
 echo  -----------------------------------------------------
 echo    EXISTING KEYS NAMES
 echo  -----------------------------------------------------
@@ -148,6 +150,8 @@ echo.
 set /p "custom_name=  Custom name (or press ENTER for default): "
 
 if "%custom_name%"=="" goto check_exists
+if /i "%custom_name%"=="exit" goto main_menu
+if /i "%custom_name%"=="back" goto main_menu
 
 echo.
 echo  -----------------------------------------------------
@@ -161,6 +165,8 @@ echo.
 echo    [1]  Yes - append encryption type
 echo    [2]  No  - keep name as typed
 echo.
+echo    Type "back" or "exit" to return to the main menu.
+echo.
 echo  -----------------------------------------------------
 echo.
 set /p "append_choice=  Your choice (1 or 2): "
@@ -169,6 +175,8 @@ if "%append_choice%"=="1" (
     if "%KEY_TYPE%"=="Ed25519" set "custom_name=%custom_name%_ed25519"
     if "%KEY_TYPE%"=="RSA 4096" set "custom_name=%custom_name%_rsa4096"
 )
+if /i "%append_choice%"=="exit" goto main_menu
+if /i "%append_choice%"=="back" goto main_menu
 
 set "KEY_FILE=%USERPROFILE%\.ssh\%custom_name%"
 
