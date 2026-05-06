@@ -120,6 +120,9 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Linux/Ubuntu/Scripts/SSH_Key_Generator.sh)
 
+> [!NOTE]
+> **Run as a normal user:** No administrative privileges or "sudo" required to manage your personal SSH keys.
+
 **⚡ Auto-run command:**
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Linux/Ubuntu/Scripts/SSH_Key_Generator.sh)"
