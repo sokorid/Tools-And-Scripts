@@ -125,15 +125,11 @@ curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokori
 | 🧹 **Known_Hosts Fix** | When removing a server, it offers to clean up old fingerprints |
 | 📋 **Quick Connect** | Select a saved alias to launch an SSH session immediately |
 
-<br>
-
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Connection_Manager.bat)
 
 | ℹ️ **Note** |
 | :--- |
 | **Execution Policy:** This script uses a tiny PowerShell helper for config block deletion. It automatically bypasses execution policies temporarily to ensure it runs seamlessly. |
-
-<br>
 
 ### 🛠️ The Manual Way
 1. **Download:** Grab the `SSH_Connection_Manager.bat` file from your Windows repository directory.
