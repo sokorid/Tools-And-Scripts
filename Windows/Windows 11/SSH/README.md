@@ -101,7 +101,7 @@
 **⚡ Auto-run command:**
 *Search for **CMD**, open it, and right-click to paste the following:*
 ```bash
-curl -s -o “%temp%\SSH_Key_Generator.bat” “https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat” && call “%temp%\SSH_Key_Generator.bat” && del “%temp%\SSH_Key_Generator.bat”
+curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat && call %temp%\SSH_Key_Generator.bat && del %temp%\SSH_Key_Generator.bat
 ```
 
 **[⬆ Back to Overview](#-script-overview)**
