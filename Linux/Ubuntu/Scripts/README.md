@@ -16,6 +16,7 @@
 | ⚙️ Auto_Setup_Ubuntu_Server | Initial server setup — updates, static IP, timezone & more |
 | 🔒 SSH_Hardening_Script | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
 | 🌐 Clear_Port_53 | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
+| 🔒 SSH_Key_Generator | Quickly generates Ed25519 or RSA keys for your servers |
 
 ---
 
@@ -99,6 +100,32 @@ sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-
 ```
 
 **[⬆ Back to Script Overview](#-script-overview)**
+
+---
+</details>
+
+<details>
+<summary>🔒 SSH_Key_Generator</summary>
+
+<br>
+
+`SSH_Key_Generator.bat` automates the creation of secure SSH keys and provides a built-in management interface for existing keys.
+
+| Feature | Details |
+|--------|---------|
+| 🔐 Ed25519 Support | Generates modern, high-security elliptic curve keys |
+| 🔐 RSA 4096 Support | Older standard, Use if Ed25519 is unsupported |
+| 📂 Auto-Saving | Places keys directly into your `user/.ssh` folder |
+| 📋 Key Management | List existing keys, view fingerprints, and display public keys |
+
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Linux/Ubuntu/Scripts/SSH_Key_Generator.sh)
+
+**⚡ Auto-run command:**
+```bash
+bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Linux/Ubuntu/Scripts/SSH_Key_Generator.sh)"
+```
+
+**[⬆ Back to Overview](#-script-overview)**
 
 ---
 </details>
