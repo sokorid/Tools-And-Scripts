@@ -16,6 +16,7 @@
 | 🚀 Open_SSH | Standard SSH connection launcher for default Port 22 |
 | 🔌 Open_SSH_Port | SSH launcher for servers using custom ports |
 | 🔒 SSH_Key_Generator | Quickly generates Ed25519 or RSA keys for your servers |
+| 🖥️ SSH_Connection_Manager | Automates SSH config entries with duplicate protection and host cleanup. |
 
 ---
 
@@ -102,6 +103,47 @@
 *Search for **CMD**, open it, and right-click to paste the following:*
 ```bash
 curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat && call %temp%\SSH_Key_Generator.bat && del %temp%\SSH_Key_Generator.bat
+```
+
+**[⬆ Back to Overview](#-script-overview)**
+
+---
+</details>
+
+<details>
+<summary>🖥️ SSH_Connection_Manager </summary>
+
+<br>
+
+`SSH_Connection_Manager.bat` is a native Windows utility to manage your local `user/.ssh/config` file and quickly connect to servers without needing to remember IP addresses, custom ports, or usernames.
+
+| Feature | Details |
+|:--- | :--- |
+| 🗂️ **Config Sync** | Automatically reads, adds, and edits your Windows SSH config file |
+| 🛡️ **Duplicate Check** | Prevents saving two servers with the same nickname or IP address |
+| 🔑 **Key Discovery** | Scans your `.ssh` folder and lets you pick keys from a list |
+| 🧹 **Known_Hosts Fix** | When removing a server, it offers to clean up old fingerprints |
+| 📋 **Quick Connect** | Select a saved alias to launch an SSH session immediately |
+
+<br>
+
+| ℹ️ **Note** |
+| :--- |
+| **Execution Policy:** This script uses a tiny PowerShell helper for config block deletion. It automatically bypasses execution policies temporarily to ensure it runs seamlessly. |
+
+<br>
+
+### 🛠️ The Manual Way
+1. **Download:** Grab the `SSH_Connection_Manager.bat` file from your Windows repository directory.
+2. **Execute:** Double-click the file to run. No Admin rights or sudo required.
+3. **Follow Prompts:** Choose whether to connect to an existing server, add a new one, edit an entry, or remove a server.
+
+---
+
+### ⚡ The Automated Way (One-Liner)
+*Search for **CMD**, open it, and right-click to paste the following:*
+```bash
+curl -s -o %temp%\SSH_Connection_Manager.bat https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Windows/Windows%2011/SSH/SSH_Connection_Manager.bat && call %temp%\SSH_Connection_Manager.bat && del %temp%\SSH_Connection_Manager.bat
 ```
 
 **[⬆ Back to Overview](#-script-overview)**
