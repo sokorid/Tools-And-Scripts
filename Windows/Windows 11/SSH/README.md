@@ -36,9 +36,10 @@
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/Open_SSH.bat)
 
 **🛠️ Setup:**
-1. Right-click the file and select **Edit**.
-2. Replace `UserName@IPAddress` with your actual login info.
-3. Save and run.
+1. Download the `.bat` file.
+2. Right-click the file and select **Edit**.
+3. Replace `UserName@IPAddress` with your actual login info.
+4. Save and run.
 
 **[⬆ Back to Overview](#-script-overview)**
 
@@ -60,9 +61,11 @@
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/Open_SSH_Port.bat)
 
 **🛠️ Setup:**
-1. Right-click the file and select **Edit**.
-2. Change `port` to your custom number (e.g., `2222`).
-3. Replace `UserName@IPAddress` with your login info.
+1. Download the `.bat` file.
+2. Right-click the file and select **Edit**.
+3. Change `port` to your custom number (e.g., `2222`).
+4. Replace `UserName@IPAddress` with your login info.
+5. Save and run.
 
 **[⬆ Back to Overview](#-script-overview)**
 
@@ -85,10 +88,21 @@
 
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat)
 
-**⚡ How to use:**
+| ℹ️ **Note** |
+| :--- |
+| **Run as a normal user:** No administrator privileges required to manage your SSH keys. |
+
+
+**🛠️ The Manual Way:**
 1. Download the `.bat` file.
 2. Run it as a normal user (no Admin required for SSH keys).
 3. Follow the prompts to name your key.
+
+**⚡ Auto-run command:**
+*Search for **CMD**, open it, and right-click to paste the following:*
+```bash
+curl -s -o “%temp%\SSH_Key_Generator.bat” “https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/refs/heads/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat” && call “%temp%\SSH_Key_Generator.bat” && del “%temp%\SSH_Key_Generator.bat”
+```
 
 **[⬆ Back to Overview](#-script-overview)**
 
