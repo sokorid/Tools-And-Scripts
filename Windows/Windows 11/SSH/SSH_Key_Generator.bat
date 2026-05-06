@@ -1,5 +1,6 @@
 @echo off
 title SSH Key Generator
+color f
 :: ============================================================
 :: Author:  sokor
 :: GitHub:  https://github.com/sokorid
@@ -9,7 +10,6 @@ title SSH Key Generator
 
 :: =================================================================================
 ::  SSH_Key_Generator.bat — Quickly generates Ed25519 or RSA keys for your servers
-::  SCRIPT_VERSION_1.3
 :: =================================================================================
 
 :: ============================================================
@@ -17,6 +17,8 @@ title SSH Key Generator
 :: ============================================================
 :main_menu
 cls
+echo.
+echo           SSH KEY Generator Script v1.6
 echo.
 echo  =====================================================
 echo    SSH Key Generator
