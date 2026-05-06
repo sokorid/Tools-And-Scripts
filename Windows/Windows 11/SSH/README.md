@@ -74,13 +74,14 @@
 
 <br>
 
-`SSH_Key_Generator.bat` automates the creation of secure SSH keys without needing to remember complex `ssh-keygen` flags.
+`SSH_Key_Generator.bat` automates the creation of secure SSH keys and provides a built-in management interface for existing keys.
 
 | Feature | Details |
 |--------|---------|
 | 🔐 Ed25519 Support | Generates modern, high-security elliptic curve keys |
 | 🔐 RSA 4096 Support | Older standard, Use if Ed25519 is unsupported |
 | 📂 Auto-Saving | Places keys directly into your `user/.ssh` folder |
+| 📋 Key Management | List existing keys, view fingerprints, and display public keys |
 
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat)
 
