@@ -17,6 +17,8 @@
 | 🔒 SSH_Hardening_Script | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
 | 🌐 Clear_Port_53 | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
 | 🔒 SSH_Key_Generator | Quickly generates Ed25519 or RSA keys for your servers |
+| 🖥️ SSH_Connection_Manager | Automates SSH config entries with duplicate protection and host cleanup. |
+
 
 ---
 
@@ -130,6 +132,38 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scrip
 ```
 
 **[⬆ Back to Overview](#-script-overview)**
+
+---
+</details>
+
+<details>
+<summary>🖥️ SSH_Connection_Manager </summary>
+
+<br>
+
+`SSH_Connection_Manager.sh` provides a high-visibility terminal interface to manage your `~/.ssh/config` file and streamline server connections.
+
+| Feature | Details |
+|:--- | :--- |
+| 🎨 **ANSI Styling** | Uses Unicode box-drawing and colors for a modern, readable Terminal look. |
+| ⚡ **Fast List** | Displays all saved servers as `alias → user@ip:port` for instant reference. |
+| 🛠️ **Key Validation** | Checks that your chosen identity file exists before saving to prevent broken connections. |
+| 🚫 **Stealth Cleanup** | Integrated `ssh-keygen -R` logic to safely remove host keys by IP address. |
+
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Linux/Ubuntu/Scripts/SSH_Connection_Manager.sh)
+
+| ℹ️ **Note** |
+| :--- |
+| **No Sudo Required:** This script manages your local user config. It does not touch system-wide files, making it safe to run without administrative privileges.|
+
+### ⚡ The Automated Way (One-Liner)
+*Paste this into your terminal and press Enter:*
+
+```bash
+bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/main/Linux/Ubuntu/Scripts/SSH_Connection_Manager.sh)"
+```
+
+**[⬆ Back to Script Overview](#-script-overview)**
 
 ---
 </details>
