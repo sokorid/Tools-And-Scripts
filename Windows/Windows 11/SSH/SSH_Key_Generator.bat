@@ -18,7 +18,7 @@ color f
 :main_menu
 cls
 echo.
-echo           SSH KEY Generator Script v1.7
+echo           SSH KEY Generator Script v1.8
 echo.
 echo  =====================================================
 echo    SSH Key Generator
@@ -96,6 +96,8 @@ for %%F in ("%USERPROFILE%\.ssh\*.pub") do (
     echo.
     echo    Fingerprint:
     ssh-keygen -lf "%%F"
+    echo.
+    echo -----------------------------------------------------
     echo.
 )
 
