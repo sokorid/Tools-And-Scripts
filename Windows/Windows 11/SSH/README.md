@@ -127,6 +127,8 @@ curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokori
 
 <br>
 
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Connection_Manager.bat)
+
 | ℹ️ **Note** |
 | :--- |
 | **Execution Policy:** This script uses a tiny PowerShell helper for config block deletion. It automatically bypasses execution policies temporarily to ensure it runs seamlessly. |
