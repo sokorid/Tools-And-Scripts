@@ -7,11 +7,11 @@
 # ============================================================
 
 # ============================================================
-#  Auto_Setup_Ubuntu_Server.sh — Initial server setup
+#  Auto_Setup_Ubuntu_Server.sh — Initial server setup (v7)
 # ============================================================
 set -euo pipefail
 
-SCRIPT_VERSION="5.0"
+SCRIPT_VERSION="5.1"
 
 # ══ Colors ───────────────────────────────────────────────────
 RED=$(printf '\033[0;31m')
@@ -90,10 +90,55 @@ validate_prefix() {
     [[ "$p" =~ ^([1-9]|[1-2][0-9]|3[0-2])$ ]]
 }
 
+# ══ IP Detection Helpers ─────────────────────────────────────
+
+# ── Detect RFC-1918 private addresses ────────────────────────
+_is_private_ip() {
+    local ip="$1"
+    [[ "$ip" =~ ^10\. ]]                              && return 0
+    [[ "$ip" =~ ^172\.(1[6-9]|2[0-9]|3[01])\. ]]     && return 0
+    [[ "$ip" =~ ^192\.168\. ]]                         && return 0
+    return 1
+}
+
+# ── Bare-metal: detect IP via local routing table ─────────────
+_detect_ip_baremetal() {
+    local ip
+    ip=$(ip route get 1.1.1.1 2>/dev/null \
+        | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
+    ip="${ip:-$(hostname -I | awk '{print $1}')}"
+    echo "$ip"
+}
+
+# ── VPS: resolve public IP via external lookup ────────────────
+_detect_ip_vps() {
+    local _public_ip=""
+    for _svc in \
+        "https://api.ipify.org" \
+        "https://ifconfig.me/ip" \
+        "https://icanhazip.com"; do
+        _public_ip=$(curl -s --max-time 3 "$_svc" 2>/dev/null | tr -d '[:space:]') || true
+        if [[ "$_public_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "$_public_ip"
+            return
+        fi
+    done
+    # Fallback — could not reach any lookup service
+    local _fallback
+    _fallback=$(ip route get 1.1.1.1 2>/dev/null \
+        | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
+    echo "${_fallback:-$(hostname -I | awk '{print $1}')}"
+}
+
+# Resolved after the bare-metal / VPS question below
+SERVER_IP=""
+SERVER_TYPE=""   # "baremetal" or "vps"
+
 # ══ Pre-flight checks ─────────────────────────────────────────
 
 # ── Root check ───────────────────────────────────────────────
 if [[ $EUID -ne 0 ]]; then
+
     err "This script must be run as root (use sudo)."
     exit 1
 fi
@@ -148,12 +193,69 @@ if [[ ! -t 0 ]]; then
     exit 1
 fi
 
+# ── Detect the real (non-root) user running the script ───────
+REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || true)}"
+REAL_USER="${REAL_USER:-${USER:-root}}"
+
+if [[ "$REAL_USER" == "root" ]]; then
+    warn "Could not detect a non-root user (SUDO_USER is unset)."
+    printf "  ${MAGENTA}Any SSH key operations will target ${BOLD_WHITE}/root/.ssh${RESET}\n"
+    printf "  ${MAGENTA}If that is not what you want, re-run with: ${BOLD_WHITE}sudo -u youruser bash script.sh${RESET}\n\n"
+fi
+
 clear
+
+# ════════════════════════════════════════════════════════════
+#  Server Environment — Bare Metal or VPS?
+# ════════════════════════════════════════════════════════════
+printf "${BOLD_CYAN}📦  Auto Setup Ubuntu Server Script v${SCRIPT_VERSION}${RESET}\n"
+header "🖥️   What type of server is this?"
+printf "  ${MAGENTA}This determines how your server's IP address is detected\n"
+printf "  and which setup steps apply to your environment.${RESET}\n\n"
+printf "  ${BOLD_GREEN}[1]${RESET}  ${BOLD_WHITE}Bare Metal${RESET}\n"
+printf "  ${MAGENTA}       Physical server or VM with a directly assigned IP.${RESET}\n\n"
+printf "  ${BOLD_CYAN}[2]${RESET}  ${BOLD_WHITE}VPS / Cloud${RESET}\n"
+printf "  ${MAGENTA}       Hosted on Vultr, DigitalOcean, Linode, AWS, Hetzner, etc.${RESET}\n"
+printf "  ${MAGENTA}       (NAT or private network — public IP fetched externally.)${RESET}\n\n"
+
+while true; do
+    read -rp "  ${BOLD_WHITE}Enter your choice${RESET} [${BOLD_WHITE}1/2${RESET}]: " _env_choice
+    case "$_env_choice" in
+        1)
+            SERVER_TYPE="baremetal"
+            info "Bare metal selected — using local route for IP detection."
+            SERVER_IP=$(_detect_ip_baremetal)
+            ok "Detected IP: ${BOLD_WHITE}${SERVER_IP}${RESET}"
+            break
+            ;;
+        2)
+            SERVER_TYPE="vps"
+            info "VPS selected — resolving public IP via external lookup..."
+            SERVER_IP=$(_detect_ip_vps)
+            if _is_private_ip "$SERVER_IP"; then
+                warn "Could not resolve a public IP — showing private address: ${BOLD_WHITE}${SERVER_IP}${RESET}"
+                warn "Check your actual public IP later with: ${BOLD_YELLOW}curl https://api.ipify.org${RESET}"
+            else
+                ok "Resolved public IP: ${BOLD_WHITE}${SERVER_IP}${RESET}"
+            fi
+            break
+            ;;
+        *)
+            err "Please enter 1 or 2."
+            ;;
+    esac
+done
+unset _env_choice
+
+clear
+printf "${BOLD_CYAN}📦  Auto Setup Ubuntu Server Script v${SCRIPT_VERSION}${RESET}\n"
+printf "\n"
+info "Server type: ${BOLD_WHITE}${SERVER_TYPE}${RESET}  |  IP: ${BOLD_WHITE}${SERVER_IP}${RESET}  |  User: ${BOLD_WHITE}${REAL_USER}${RESET}"
+printf "\n"
 
 # ════════════════════════════════════════════════════════════
 #  STEP 1 — System Update
 # ════════════════════════════════════════════════════════════
-printf "${BOLD_CYAN}📦  Auto Setup Ubuntu Server Script v${SCRIPT_VERSION}${RESET}\n"
 header "🖥️  Step 1 — System Update"
 
 info "Checking for updates..."
@@ -354,20 +456,22 @@ header "⚙️   Step 3 — Configure Static IP"
 printf "  ${WHITE}A static IP ensures this machine always has the same address on\n"
 printf "  the network — useful for servers, remote access, and port forwarding.${RESET}\n\n"
 
-printf "  ${BOLD_YELLOW}⚠️  VPS / Cloud server? Read this first:${RESET}\n"
-printf "  ${MAGENTA}If this machine is hosted on a VPS or cloud provider (DigitalOcean,\n"
-printf "  Vultr, Linode, AWS, Hetzner, etc.), your IP is already managed by the\n"
-printf "  provider at the hypervisor level — not inside the OS. Configuring a\n"
-printf "  static IP here can overwrite your provider's network settings, drop\n"
-printf "  your SSH connection, and potentially lock you out of the server.\n\n"
-printf "  On a VPS, skip this step and manage your IP through your provider's\n"
-printf "  control panel instead.${RESET}\n\n"
+# ── VPS-aware warning ─────────────────────────────────────────
+if [[ "$SERVER_TYPE" == "vps" ]]; then
+    printf "  ${BOLD_RED}⚠️  VPS DETECTED — We strongly recommend skipping this step.${RESET}\n"
+    printf "  ${MAGENTA}Your IP is managed by the provider at the hypervisor level.\n"
+    printf "  Configuring a static IP here can overwrite your provider's network\n"
+    printf "  settings, drop your SSH connection, and lock you out of the server.\n\n"
+    printf "  Manage your IP through your provider's control panel instead.${RESET}\n\n"
 
-printf "  ${BOLD_YELLOW}⚠️  Physical / bare-metal server? We strongly recommend setting a static IP.${RESET}\n"
-printf "  ${MAGENTA}Without one, your server's address can change every time it reboots\n"
-printf "  or reconnects to the network. This breaks SSH connections, any services\n"
-printf "  pointed at a fixed address, and makes your server harder to manage\n"
-printf "  reliably over time.${RESET}\n\n"
+else
+    
+    printf "  ${BOLD_YELLOW}⚠️  Physical / bare-metal server? We strongly recommend setting a static IP.${RESET}\n"
+    printf "  ${MAGENTA}Without one, your server's address can change every time it reboots\n"
+    printf "  or reconnects to the network. This breaks SSH connections, any services\n"
+    printf "  pointed at a fixed address, and makes your server harder to manage\n"
+    printf "  reliably over time.${RESET}\n\n"
+fi
 
 # ── Ask if they want to set a static IP ──────────────────────
 SKIP_STATIC_IP=false
@@ -775,14 +879,17 @@ pause_and_clear
 # ════════════════════════════════════════════════════════════
 #  Finish
 # ════════════════════════════════════════════════════════════
-CURRENT_USER="${SUDO_USER:-$(whoami)}"
+CURRENT_USER="${REAL_USER:-${SUDO_USER:-$(whoami)}}"
 CURRENT_HOSTNAME=$(hostname)
 
-# ── Build the SSH connection line based on whether static IP was set
+# ── Build the SSH connection IP based on priority:
+#    1. Static IP (if configured this session)
+#    2. SERVER_IP (public IP for VPS, local route for bare-metal)
+#    3. Fallback placeholder
 if [[ "$SKIP_STATIC_IP" == false ]]; then
     CONNECT_IP="$STATIC_IP"
 else
-    CONNECT_IP="${DETECTED_IP:-<your-server-ip>}"
+    CONNECT_IP="${SERVER_IP:-${DETECTED_IP:-<your-server-ip>}}"
 fi
 
 printf "\n${BOLD_GREEN}════════════════════════════════════════════════════════${RESET}\n"
