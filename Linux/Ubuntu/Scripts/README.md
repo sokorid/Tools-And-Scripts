@@ -17,8 +17,8 @@
 | 🔒 SSH_Hardening_Script | Secures SSH — keys, firewall, Fail2Ban & stealth mode |
 | 🌐 Clear_Port_53 | Frees up Port 53 for Pi-hole, AdGuard Home & local DNS |
 | 🔒 SSH_Key_Generator | Quickly generates Ed25519 or RSA keys for your servers |
-| 🖥️ SSH_Connection_Manager | Automates SSH config entries with duplicate protection and host cleanup. |
-
+| 🖥️ SSH_Connection_Manager | Automates SSH config entries with duplicate protection and host cleanup |
+| 🔑 SSH_Passkey_Manager | Manages authorized_keys — add, list, and remove SSH public keys |
 
 ---
 
@@ -137,7 +137,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scrip
 </details>
 
 <details>
-<summary>🖥️ SSH_Connection_Manager </summary>
+<summary>🖥️ SSH_Connection_Manager</summary>
 
 <br>
 
@@ -156,11 +156,37 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scrip
 | :--- |
 | **No Sudo Required:** This script manages your local user config. It does not touch system-wide files, making it safe to run without administrative privileges.|
 
-### ⚡ The Automated Way (One-Liner)
-*Paste this into your terminal and press Enter:*
-
+**⚡ Auto-run command:**
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/main/Linux/Ubuntu/Scripts/SSH_Connection_Manager.sh)"
+```
+
+**[⬆ Back to Script Overview](#-script-overview)**
+
+---
+</details>
+
+<details>
+<summary>🔑 SSH_Passkey_Manager</summary>
+
+<br>
+
+`SSH_Passkey_Manager.sh` provides a menu-driven interface to manage your server's `~/.ssh/authorized_keys` file safely and securely.
+
+| Feature | Details |
+|:--- | :--- |
+| ➕ **Add Keys** | Paste, validate, and store new SSH public keys with cryptographic verification |
+| 📋 **List Keys** | View all authorized keys with type, comment, fingerprint, and preview |
+| 🗑️ **Remove Keys** | Safely delete keys by paste-match with lockout warning if removing the last key |
+| 🛡️ **Duplicate Guard** | Detects and blocks duplicate keys before they are written |
+| ✅ **Crypto Validation** | Runs `ssh-keygen -l` on every key to catch truncated or corrupted input |
+| 🎨 **ANSI Styling** | Color-coded terminal UI with Unicode box-drawing for clear readability |
+
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Linux/Ubuntu/Scripts/SSH_Passkey_Manager.sh)
+
+**⚡ Auto-run command:**
+```bash
+sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/sokorid/Tools-And-Scripts/main/Linux/Ubuntu/Scripts/SSH_Passkey_Manager.sh)"
 ```
 
 **[⬆ Back to Script Overview](#-script-overview)**
