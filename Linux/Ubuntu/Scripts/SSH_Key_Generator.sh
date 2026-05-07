@@ -1,104 +1,131 @@
-#!/usr/bin/env bash
-# ============================================================
+#!/bin/bash
+# ════════════════════════════════════════════════════════════
 # Author:  sokor
 # GitHub:  https://github.com/sokorid
 # License: MIT (https://opensource.org/licenses/MIT)
 # Notice:  Provided "as is", without warranty of any kind.
-# ============================================================
+# ════════════════════════════════════════════════════════════
 
-# =================================================================================
-#  ssh_key_generator.sh — Quickly generates Ed25519 or RSA keys for your servers
-# =================================================================================
+# ════════════════════════════════════════════════════════════
+#  ssh_key_generator.sh — Quickly generates Ed25519 or RSA
+#  keys for your servers
+# ════════════════════════════════════════════════════════════
+
+set -euo pipefail
 
 SSH_DIR="$HOME/.ssh"
 
-#the current version of The Script
-SCRIPT_VERSION="1.2"
+# ── Script version ───────────────────────────────────────────
+SCRIPT_VERSION="1.3"
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  COLORS & STYLES
-# ============================================================
-RESET="\033[0m"
-BOLD="\033[1m"
-DIM="\033[2m"
+# ════════════════════════════════════════════════════════════
 
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-YELLOW="\033[0;33m"
-CYAN="\033[0;36m"
-WHITE="\033[0;37m"
+# ── Non-interactive terminal fallback: strip all colors ──────
+if [ -t 1 ]; then
+    RESET=$(printf '\033[0m')
+    BOLD=$(printf '\033[1m')
 
-BOLD_RED="\033[1;31m"
-BOLD_GREEN="\033[1;32m"
-BOLD_YELLOW="\033[1;33m"
-BOLD_CYAN="\033[1;36m"
-BOLD_WHITE="\033[1;37m"
-BOLD_MAGENTA="\033[1;35m"
+    RED=$(printf '\033[0;31m')
+    GREEN=$(printf '\033[0;32m')
+    YELLOW=$(printf '\033[0;33m')
+    CYAN=$(printf '\033[0;36m')
+    WHITE=$(printf '\033[0;37m')
+    MAGENTA=$(printf '\033[0;35m')
 
-# ============================================================
-#  HELPERS
-# ============================================================
-print_line() {
-    echo -e "${DIM}${CYAN} ─────────────────────────────────────────────────────${RESET}"
+    BOLD_RED=$(printf '\033[1;31m')
+    BOLD_GREEN=$(printf '\033[1;32m')
+    BOLD_YELLOW=$(printf '\033[1;33m')
+    BOLD_CYAN=$(printf '\033[1;36m')
+    BOLD_WHITE=$(printf '\033[1;37m')
+    BOLD_MAGENTA=$(printf '\033[1;35m')
+else
+    RESET="" BOLD=""
+    RED="" GREEN="" YELLOW="" CYAN="" WHITE="" MAGENTA=""
+    BOLD_RED="" BOLD_GREEN="" BOLD_YELLOW="" BOLD_CYAN="" BOLD_WHITE="" BOLD_MAGENTA=""
+fi
+
+# ════════════════════════════════════════════════════════════
+#  UI HELPERS
+# ════════════════════════════════════════════════════════════
+
+ok()   { printf "  ${BOLD_GREEN}✅  %s${RESET}\n" "$*"; }
+info() { printf "  ${BOLD_CYAN}ℹ️   %s${RESET}\n" "$*"; }
+warn() { printf "  ${BOLD_YELLOW}⚠️   %s${RESET}\n" "$*"; }
+err()  { printf "  ${BOLD_RED}❌  %s${RESET}\n" "$*" >&2; }
+
+# ── Section rule ─────────────────────────────────────────────
+header() {
+    local title="$1"
+    printf "\n  ${BOLD_CYAN}════════════════════════════════════════════${RESET}\n"
+    printf "  ${BOLD_WHITE}%s${RESET}\n" "$title"
+    printf "  ${BOLD_CYAN}════════════════════════════════════════════${RESET}\n\n"
 }
 
-print_header() {
-    clear
-    echo ""
-    echo -e "${BOLD_CYAN} ╔═════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${BOLD_CYAN} ║${RESET}  ${BOLD_WHITE}🔐  SSH Key Generator${RESET}                              ${BOLD_CYAN}║${RESET}"
-    echo -e "${BOLD_CYAN} ╚═════════════════════════════════════════════════════╝${RESET}"
-    echo ""
+# ── Thin rule ────────────────────────────────────────────────
+rule() {
+    printf "  ${CYAN}────────────────────────────────────────────${RESET}\n"
 }
 
-print_header_main() {
-    echo ""
-    echo -e "${BOLD_CYAN} ╔═════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${BOLD_CYAN} ║${RESET}  ${BOLD_WHITE}🔐  SSH Key Generator${RESET}                              ${BOLD_CYAN}║${RESET}"
-    echo -e "${BOLD_CYAN} ╚═════════════════════════════════════════════════════╝${RESET}"
-    echo ""
+# ── Yes / No prompt ──────────────────────────────────────────
+ask_yes_no() {
+    local prompt="$1"
+    local answer
+    while true; do
+        printf "  ${BOLD_WHITE}%s [${BOLD_WHITE}y/n${RESET}${BOLD_WHITE}]:${RESET} " "$prompt"
+        read -r answer
+        case "${answer,,}" in
+            y|yes) return 0 ;;
+            n|no)  return 1 ;;
+            *)     warn "Please enter y or n." ;;
+        esac
+    done
 }
 
-press_enter() {
-    echo ""
-    echo -e "  ${DIM}Press ${BOLD_WHITE}ENTER${RESET}${DIM} to continue...${RESET}"
-    read -r _
+# ── Navigation helpers ───────────────────────────────────────
+_check_nav() {
+    # ── Returns 0 (go back) if input is "back" or "exit" ────
+    case "${1,,}" in back|exit) return 0 ;; esac
+    return 1
 }
 
 press_enter_menu() {
-    echo ""
-    echo -e "  ${DIM}Press ${BOLD_WHITE}ENTER${RESET}${DIM} to return to the menu...${RESET}"
+    printf "\n  ${MAGENTA}Press ENTER to return to the menu...${RESET}\n"
     read -r _
     main_menu
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  MAIN MENU
-# ============================================================
+# ════════════════════════════════════════════════════════════
 main_menu() {
     clear
-    echo -e "${BOLD_CYAN}       📦  SSH KEY Generator Script v${SCRIPT_VERSION}${RESET}"
-    print_header_main
-    echo -e "  ${WHITE}Generates a secure SSH key for connecting to${RESET}"
-    echo -e "  ${WHITE}servers without a password and better security.${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_WHITE}Choose your key type:${RESET}"
-    echo ""
-    echo -e "  ${BOLD_GREEN}[1]${RESET}  ${BOLD_WHITE}Ed25519${RESET}  ${BOLD_GREEN}✅ Recommended${RESET}"
-    echo -e "       ${DIM}⚡ Modern, fast, and highly secure.${RESET}"
-    echo ""
-    echo -e "  ${BOLD_YELLOW}[2]${RESET}  ${BOLD_WHITE}RSA 4096${RESET}"
-    echo -e "       ${DIM}🔑 Older standard. Use if Ed25519 is unsupported.${RESET}"
-    echo ""
-    echo -e "  ${BOLD_CYAN}[3]${RESET}  ${BOLD_WHITE}List Existing Keys${RESET}"
-    echo -e "       ${DIM}📋 View any SSH keys already on this machine.${RESET}"
-    echo ""
-    echo -e "  ${BOLD_RED}[4]${RESET}  ${BOLD_WHITE}Exit${RESET}"
-    echo ""
-    print_line
-    echo ""
-    read -rp "$(echo -e "  ${BOLD_WHITE}Your choice (1, 2, 3 or 4):${RESET} ")" choice
+    printf "\n  ${BOLD_CYAN}📦  SSH Key Generator  v${SCRIPT_VERSION}${RESET}\n"
+    header "🔐  SSH Key Generator"
+
+    printf "  ${WHITE}Generates a secure SSH key for connecting to${RESET}\n"
+    printf "  ${WHITE}servers without a password and better security.${RESET}\n\n"
+    rule
+
+    printf "  ${BOLD_WHITE}Choose your key type:${RESET}\n\n"
+
+    printf "  ${BOLD_GREEN}[1]${RESET}  ${BOLD_WHITE}Ed25519${RESET}  ${BOLD_GREEN}✅ Recommended${RESET}\n"
+    printf "       ${MAGENTA}⚡ Modern, fast, and highly secure.${RESET}\n\n"
+
+    printf "  ${BOLD_CYAN}[2]${RESET}  ${BOLD_WHITE}RSA 4096${RESET}\n"
+    printf "       ${MAGENTA}🔑 Older standard. Use if Ed25519 is unsupported.${RESET}\n\n"
+
+    printf "  ${BOLD_YELLOW}[3]${RESET}  ${BOLD_WHITE}List Existing Keys${RESET}\n"
+    printf "       ${MAGENTA}📋 View any SSH keys already on this machine.${RESET}\n\n"
+
+    printf "  ${BOLD_RED}[4]${RESET}  ${BOLD_WHITE}Exit${RESET}\n\n"
+    rule
+    printf "\n"
+
+    local choice
+    printf "  ${BOLD_WHITE}Your choice (1, 2, 3 or 4):${RESET} "
+    read -r choice
 
     case "$choice" in
         1) gen_ed25519 ;;
@@ -106,17 +133,16 @@ main_menu() {
         3) list_keys ;;
         4) exit_script ;;
         *)
-            echo ""
-            echo -e "  ${BOLD_RED}❌  Invalid choice.${RESET} ${WHITE}Please enter 1, 2, 3 or 4.${RESET}"
-            press_enter
-            main_menu
+            printf "\n"
+            err "Invalid choice. Please enter 1, 2, 3 or 4."
+            press_enter_menu
             ;;
     esac
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  GENERATE Ed25519
-# ============================================================
+# ════════════════════════════════════════════════════════════
 gen_ed25519() {
     KEY_TYPE="Ed25519"
     KEY_FILE="$SSH_DIR/id_ed25519"
@@ -124,9 +150,9 @@ gen_ed25519() {
     name_key
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  GENERATE RSA
-# ============================================================
+# ════════════════════════════════════════════════════════════
 gen_rsa() {
     KEY_TYPE="RSA 4096"
     KEY_FILE="$SSH_DIR/id_rsa"
@@ -134,101 +160,122 @@ gen_rsa() {
     name_key
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  LIST EXISTING KEYS
-# ============================================================
+# ════════════════════════════════════════════════════════════
 list_keys() {
-    print_header
-    echo -e "  ${BOLD_CYAN}📋  Existing SSH Keys${RESET}"
-    print_line
-    echo ""
+    clear
+    header "📋  Existing SSH Keys"
 
-    found_keys=0
-
+    # ── Count .pub files ─────────────────────────────────────
+    local count=0
     for pub_file in "$SSH_DIR"/*.pub; do
-        [ -f "$pub_file" ] || continue
-        found_keys=1
-        echo -e "  ${BOLD_GREEN}🗝️   Key:${RESET} ${BOLD_WHITE}$pub_file${RESET}"
-        echo ""
-        echo -e "  ${BOLD_YELLOW}📄  Public Key:${RESET}"
-        echo -e "  ${CYAN}$(cat "$pub_file")${RESET}"
-        echo ""
-        echo -e "  ${BOLD_MAGENTA}🔍  Fingerprint:${RESET}"
-        echo -e "  ${WHITE}$(ssh-keygen -lf "$pub_file")${RESET}"
-        print_line
-        echo ""
+        [ -f "$pub_file" ] && count=$((count + 1))
     done
 
-    if [ "$found_keys" -eq 0 ]; then
-        echo -e "  ${BOLD_YELLOW}⚠️   No SSH keys found on this machine.${RESET}"
-        echo ""
-        print_line
+    if [ "$count" -eq 0 ]; then
+        warn "No SSH keys found on this machine."
+        printf "\n"
+        press_enter_menu
+        return
     fi
+
+    info "Found ${BOLD_WHITE}${count}${RESET}${BOLD_CYAN} key(s) in ${BOLD_WHITE}${SSH_DIR}${RESET}${BOLD_CYAN}."
+    printf "\n"
+    rule
+
+    local index=0
+    for pub_file in "$SSH_DIR"/*.pub; do
+        [ -f "$pub_file" ] || continue
+        index=$((index + 1))
+
+        local KEY_TYPE KEY_COMMENT KEY_MATERIAL FINGERPRINT TMPKEY
+        KEY_TYPE=$(awk '{print $1}' "$pub_file")
+        KEY_COMMENT=$(awk '{print $3}' "$pub_file")
+        KEY_MATERIAL=$(awk '{print $2}' "$pub_file")
+
+        TMPKEY=$(mktemp)
+        cp "$pub_file" "$TMPKEY"
+        FINGERPRINT=$(ssh-keygen -lf "$TMPKEY" 2>/dev/null || printf "unable to read fingerprint")
+        rm -f "$TMPKEY"
+
+        printf "\n  ${BOLD_WHITE}Key #%d${RESET}\n" "$index"
+        printf "  ${BOLD_CYAN}Name:${RESET}        ${WHITE}%s${RESET}\n"        "$(basename "${pub_file%.pub}")"
+        printf "  ${BOLD_CYAN}Type:${RESET}        ${WHITE}%s${RESET}\n"        "$KEY_TYPE"
+        printf "  ${BOLD_CYAN}Comment:${RESET}     ${WHITE}%s${RESET}\n"        "${KEY_COMMENT:-"(none)"}"
+        printf "  ${BOLD_CYAN}Fingerprint:${RESET} ${BOLD_YELLOW}%s${RESET}\n"  "$FINGERPRINT"
+        printf "  ${BOLD_CYAN}Preview:${RESET}     ${MAGENTA}%s...%s${RESET}\n" \
+            "${KEY_MATERIAL:0:20}" "${KEY_MATERIAL: -10}"
+        rule
+    done
 
     press_enter_menu
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  NAME THE KEY
-# ============================================================
+# ════════════════════════════════════════════════════════════
 name_key() {
-    print_header
-    echo -e "  ${BOLD_CYAN}✏️   Key File Name${RESET}"
-    print_line
-    echo -e "  ${WHITE}You can give your key a custom name, or press${RESET}"
-    echo -e "  ${WHITE}ENTER to use the default name.${RESET}"
-    echo ""
-    echo -e "  ${DIM}Default :${RESET} ${BOLD_WHITE}$KEY_FILE${RESET}"
-    echo -e "  ${DIM}Example : my_server  →  $SSH_DIR/my_server${RESET}"
-    echo ""
-    echo -e "  ${DIM}Type ${BOLD_WHITE}back${RESET}${DIM} or ${BOLD_WHITE}exit${RESET}${DIM} to return to the main menu.${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_CYAN}📋  Existing Key Names${RESET}"
-    print_line
+    clear
+    header "✏️   Key File Name"
 
-    any_keys=0
+    printf "  ${WHITE}You can give your key a custom name, or press${RESET}\n"
+    printf "  ${WHITE}ENTER to use the default name.${RESET}\n\n"
+
+    printf "  ${BOLD_CYAN}Default:${RESET}  ${WHITE}%s${RESET}\n" "$KEY_FILE"
+    printf "  ${BOLD_CYAN}Example:${RESET}  ${MAGENTA}my_server  →  %s/my_server${RESET}\n\n" "$SSH_DIR"
+    printf "  ${MAGENTA}Type ${BOLD_WHITE}back${RESET}${MAGENTA} or ${BOLD_WHITE}exit${RESET}${MAGENTA} to return to the main menu.${RESET}\n\n"
+
+    rule
+    printf "  ${BOLD_CYAN}Existing Key Names${RESET}\n"
+    rule
+
+    local any_keys=0
     for pub_file in "$SSH_DIR"/*.pub; do
         [ -f "$pub_file" ] || continue
         any_keys=1
-        echo -e "  ${BOLD_GREEN}🗝️  ${RESET} ${WHITE}$(basename "${pub_file%.pub}")${RESET}"
+        printf "  ${BOLD_GREEN}🗝️   ${WHITE}%s${RESET}\n" "$(basename "${pub_file%.pub}")"
     done
-    [ "$any_keys" -eq 0 ] && echo -e "  ${DIM}None found${RESET}"
- 
-    echo ""
-    print_line
-    echo ""
-    read -rp "$(echo -e "  ${BOLD_WHITE}Custom name (or press ENTER for default):${RESET} ")" custom_name
- 
-    if [[ "$custom_name" == "exit" || "$custom_name" == "back" ]]; then
+    [ "$any_keys" -eq 0 ] && printf "  ${MAGENTA}None found${RESET}\n"
+
+    printf "\n"
+    rule
+    printf "\n"
+
+    local custom_name
+    printf "  ${BOLD_WHITE}Custom name (or press ENTER for default):${RESET} "
+    read -r custom_name
+
+    if _check_nav "$custom_name"; then
         main_menu
         return
     fi
 
     if [ -n "$custom_name" ]; then
-        echo ""
-        print_line
-        echo -e "  ${BOLD_CYAN}🏷️   Append Encryption Type?${RESET}"
-        print_line
-        echo -e "  ${WHITE}Append the encryption type to your key name${RESET}"
-        echo -e "  ${WHITE}for easy identification?${RESET}"
-        echo ""
-        if [ "$KEY_TYPE" = "Ed25519" ]; then
-            echo -e "  ${DIM}Example: ${BOLD_WHITE}${custom_name}_ed25519${RESET}"
-        else
-            echo -e "  ${DIM}Example: ${BOLD_WHITE}${custom_name}_rsa4096${RESET}"
-        fi
-        echo ""
-        echo -e "  ${BOLD_GREEN}[1]${RESET}  ${WHITE}Yes — append encryption type${RESET}"
-        echo -e "  ${BOLD_YELLOW}[2]${RESET}  ${WHITE}No  — keep name as typed${RESET}"
-        echo ""
-        echo -e "  ${DIM}Type ${BOLD_WHITE}back${RESET}${DIM} or ${BOLD_WHITE}exit${RESET}${DIM} to return to the main menu.${RESET}"
-        echo ""
-        print_line
-        echo ""
-        read -rp "$(echo -e "  ${BOLD_WHITE}Your choice (1 or 2):${RESET} ")" append_choice
+        printf "\n"
+        rule
+        printf "  ${BOLD_CYAN}Append Encryption Type?${RESET}\n"
+        rule
+        printf "  ${WHITE}Append the encryption type to your key name${RESET}\n"
+        printf "  ${WHITE}for easy identification?${RESET}\n\n"
 
-        if [[ "$append_choice" == "exit" || "$append_choice" == "back" ]]; then
+        if [ "$KEY_TYPE" = "Ed25519" ]; then
+            printf "  ${MAGENTA}Example: ${BOLD_WHITE}%s_ed25519${RESET}\n\n" "$custom_name"
+        else
+            printf "  ${MAGENTA}Example: ${BOLD_WHITE}%s_rsa4096${RESET}\n\n" "$custom_name"
+        fi
+
+        printf "  ${BOLD_GREEN}[1]${RESET}  ${WHITE}Yes — append encryption type${RESET}\n"
+        printf "  ${BOLD_YELLOW}[2]${RESET}  ${WHITE}No  — keep name as typed${RESET}\n\n"
+        printf "  ${MAGENTA}Type ${BOLD_WHITE}back${RESET}${MAGENTA} or ${BOLD_WHITE}exit${RESET}${MAGENTA} to return to the main menu.${RESET}\n\n"
+        rule
+        printf "\n"
+
+        local append_choice
+        printf "  ${BOLD_WHITE}Your choice (1 or 2):${RESET} "
+        read -r append_choice
+
+        if _check_nav "$append_choice"; then
             main_menu
             return
         fi
@@ -247,11 +294,11 @@ name_key() {
     check_exists
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  CHECK IF KEY ALREADY EXISTS
-# ============================================================
+# ════════════════════════════════════════════════════════════
 check_exists() {
-    print_header
+    clear
 
     if [ -f "$KEY_FILE" ]; then
         show_existing
@@ -260,130 +307,120 @@ check_exists() {
     fi
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  GENERATE NEW KEY
-# ============================================================
+# ════════════════════════════════════════════════════════════
 generate_key() {
-    echo -e "  ${BOLD_CYAN}🔄  Creating a new ${BOLD_WHITE}$KEY_TYPE${RESET}${BOLD_CYAN} key...${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_YELLOW}🔒  About Passphrases${RESET}"
-    print_line
-    echo -e "  ${WHITE}ssh-keygen will now ask you to set a passphrase.${RESET}"
-    echo ""
-    echo -e "  ${WHITE}A passphrase is an optional password that protects${RESET}"
-    echo -e "  ${WHITE}your key file. If someone steals your key file,${RESET}"
-    echo -e "  ${WHITE}they still cannot use it without the passphrase.${RESET}"
-    echo ""
-    echo -e "  ${BOLD_GREEN}↵${RESET}  ${WHITE}Press ENTER twice to skip (no passphrase)${RESET}"
-    echo -e "  ${BOLD_YELLOW}🔐${RESET}  ${WHITE}Or type a strong password to protect your key${RESET}"
-    echo ""
-    echo -e "  ${DIM}💡 Tip: For automated scripts or servers, skipping${RESET}"
-    echo -e "  ${DIM}   the passphrase is common. For personal keys,${RESET}"
-    echo -e "  ${DIM}   setting one is strongly recommended.${RESET}"
-    print_line
-    press_enter
+    info "Creating a new ${KEY_TYPE} key..."
+    printf "\n"
+    rule
+    printf "  ${BOLD_CYAN}🔒  About Passphrases${RESET}\n"
+    rule
+    printf "  ${WHITE}ssh-keygen will now ask you to set a passphrase.${RESET}\n\n"
+    printf "  ${WHITE}A passphrase is an optional password that protects${RESET}\n"
+    printf "  ${WHITE}your key file. If someone steals your key file,${RESET}\n"
+    printf "  ${WHITE}they still cannot use it without the passphrase.${RESET}\n\n"
+    printf "  ${BOLD_GREEN}↵${RESET}  ${WHITE}Press ENTER twice to skip (no passphrase)${RESET}\n"
+    printf "  ${BOLD_YELLOW}🔐${RESET}  ${WHITE}Or type a strong password to protect your key${RESET}\n\n"
+    printf "  ${MAGENTA}💡 Tip: For automated scripts or servers, skipping${RESET}\n"
+    printf "  ${MAGENTA}   the passphrase is common. For personal keys,${RESET}\n"
+    printf "  ${MAGENTA}   setting one is strongly recommended.${RESET}\n"
+    rule
+
+    printf "\n  ${MAGENTA}Press ENTER to continue...${RESET}\n"
+    read -r _
 
     mkdir -p "$SSH_DIR"
     chmod 700 "$SSH_DIR"
 
     # shellcheck disable=SC2086
-    ssh-keygen $KEYGEN_ARGS -f "$KEY_FILE"
-
-    if [ $? -ne 0 ]; then
-        echo ""
-        echo -e "  ${BOLD_RED}❌  Key generation failed. Please try again.${RESET}"
+    if ! ssh-keygen $KEYGEN_ARGS -f "$KEY_FILE"; then
+        printf "\n"
+        err "Key generation failed. Please try again."
         press_enter_menu
         return
     fi
 
-    print_header
-    echo -e "  ${BOLD_GREEN}✅  SUCCESS!${RESET} ${WHITE}Your ${BOLD_WHITE}$KEY_TYPE${RESET}${WHITE} key has been created.${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_CYAN}📁  Key Location${RESET}"
-    print_line
-    echo -e "  ${DIM}🔒 Private key :${RESET} ${BOLD_WHITE}$KEY_FILE${RESET}"
-    echo -e "  ${DIM}📄 Public key  :${RESET} ${BOLD_WHITE}${KEY_FILE}.pub${RESET}"
-    echo ""
-    echo -e "  ${BOLD_RED}🚫  Keep your PRIVATE key secret. Never share it.${RESET}"
-    echo -e "  ${BOLD_GREEN}📤  Copy your PUBLIC key to any server you want access to.${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_YELLOW}📄  Your Public Key${RESET}"
-    print_line
-    echo ""
-    echo -e "  ${CYAN}$(cat "${KEY_FILE}.pub")${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_MAGENTA}🔍  Key Fingerprint${RESET}"
-    print_line
-    echo -e "  ${DIM}A fingerprint is a short unique ID for your key.${RESET}"
-    echo -e "  ${DIM}Use it to verify the right server, or identify${RESET}"
-    echo -e "  ${DIM}which key is which if you have several.${RESET}"
-    echo ""
-    echo -e "  ${WHITE}$(ssh-keygen -lf "${KEY_FILE}.pub")${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_GREEN}🎉  All done! Copy the public key above to your server.${RESET}"
-    print_line
+    clear
+    header "✅  Key Created Successfully"
+
+    ok "Your ${KEY_TYPE} key has been created."
+    printf "\n"
+    rule
+    printf "  ${BOLD_CYAN}Key Location${RESET}\n"
+    rule
+    printf "  ${BOLD_CYAN}Private key:${RESET}  ${WHITE}%s${RESET}\n" "$KEY_FILE"
+    printf "  ${BOLD_CYAN}Public key:${RESET}   ${WHITE}%s.pub${RESET}\n\n" "$KEY_FILE"
+    printf "  ${BOLD_RED}🚫  Keep your PRIVATE key secret. Never share it.${RESET}\n"
+    printf "  ${BOLD_GREEN}📤  Copy your PUBLIC key to any server you want access to.${RESET}\n\n"
+
+    rule
+    printf "  ${BOLD_CYAN}Public Key${RESET}\n"
+    rule
+    printf "\n  ${WHITE}%s${RESET}\n\n" "$(cat "${KEY_FILE}.pub")"
+
+    rule
+    printf "  ${BOLD_CYAN}Fingerprint${RESET}\n"
+    rule
+    printf "  ${MAGENTA}A fingerprint is a short unique ID for your key.${RESET}\n"
+    printf "  ${MAGENTA}Use it to verify the right server, or identify${RESET}\n"
+    printf "  ${MAGENTA}which key is which if you have several.${RESET}\n\n"
+    printf "  ${BOLD_YELLOW}%s${RESET}\n\n" "$(ssh-keygen -lf "${KEY_FILE}.pub")"
+    rule
+    ok "All done! Copy the public key above to your server."
+    rule
 
     press_enter_menu
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  SHOW EXISTING KEY
-# ============================================================
+# ════════════════════════════════════════════════════════════
 show_existing() {
-    echo -e "  ${BOLD_YELLOW}⚠️   A $KEY_TYPE key already exists.${RESET} ${DIM}No new key was created.${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_CYAN}📁  Key Location${RESET}"
-    print_line
-    echo -e "  ${DIM}🔒 Private key :${RESET} ${BOLD_WHITE}$KEY_FILE${RESET}"
-    echo -e "  ${DIM}📄 Public key  :${RESET} ${BOLD_WHITE}${KEY_FILE}.pub${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_YELLOW}📄  Your Public Key${RESET}"
-    print_line
-    echo ""
-    echo -e "  ${CYAN}$(cat "${KEY_FILE}.pub")${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_MAGENTA}🔍  Key Fingerprint${RESET}"
-    print_line
-    echo -e "  ${DIM}A fingerprint is a short unique ID for your key.${RESET}"
-    echo -e "  ${DIM}Use it to verify the right server, or identify${RESET}"
-    echo -e "  ${DIM}which key is which if you have several.${RESET}"
-    echo ""
-    echo -e "  ${WHITE}$(ssh-keygen -lf "${KEY_FILE}.pub")${RESET}"
-    echo ""
-    print_line
-    echo -e "  ${BOLD_CYAN}💡  To generate a key with a different name,${RESET}"
-    echo -e "  ${BOLD_CYAN}    run the script again and choose a custom name.${RESET}"
-    print_line
+    header "⚠️   Key Already Exists"
+
+    warn "A ${KEY_TYPE} key already exists. No new key was created."
+    printf "\n"
+    rule
+    printf "  ${BOLD_CYAN}Key Location${RESET}\n"
+    rule
+    printf "  ${BOLD_CYAN}Private key:${RESET}  ${WHITE}%s${RESET}\n" "$KEY_FILE"
+    printf "  ${BOLD_CYAN}Public key:${RESET}   ${WHITE}%s.pub${RESET}\n\n" "$KEY_FILE"
+
+    rule
+    printf "  ${BOLD_CYAN}Public Key${RESET}\n"
+    rule
+    printf "\n  ${WHITE}%s${RESET}\n\n" "$(cat "${KEY_FILE}.pub")"
+
+    rule
+    printf "  ${BOLD_CYAN}Fingerprint${RESET}\n"
+    rule
+    printf "  ${MAGENTA}A fingerprint is a short unique ID for your key.${RESET}\n"
+    printf "  ${MAGENTA}Use it to verify the right server, or identify${RESET}\n"
+    printf "  ${MAGENTA}which key is which if you have several.${RESET}\n\n"
+    printf "  ${BOLD_YELLOW}%s${RESET}\n\n" "$(ssh-keygen -lf "${KEY_FILE}.pub")"
+
+    rule
+    info "To generate a key with a different name,"
+    info "run the script again and choose a custom name."
+    rule
 
     press_enter_menu
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  EXIT
-# ============================================================
+# ════════════════════════════════════════════════════════════
 exit_script() {
     clear
-    echo ""
-    echo -e "${BOLD_CYAN} ╔═════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${BOLD_CYAN} ║${RESET}  ${BOLD_WHITE}🔐  SSH Key Generator${RESET}                              ${BOLD_CYAN}║${RESET}"
-    echo -e "${BOLD_CYAN} ╚═════════════════════════════════════════════════════╝${RESET}"
-    echo ""
-    echo -e "  ${BOLD_WHITE}👋  Goodbye!${RESET}"
-    echo ""
-    print_line
-    echo ""
+    header "🔐  SSH Key Generator"
+    printf "  ${BOLD_WHITE}👋  Goodbye!${RESET}\n\n"
+    rule
+    printf "\n"
     exit 0
 }
 
-# ============================================================
+# ════════════════════════════════════════════════════════════
 #  ENTRY POINT
-# ============================================================
+# ════════════════════════════════════════════════════════════
 main_menu
