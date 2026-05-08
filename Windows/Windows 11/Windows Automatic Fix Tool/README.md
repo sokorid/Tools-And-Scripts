@@ -1,5 +1,5 @@
 <!-- PRIMARY: Windows Automatic Fix Tool.bat | RE:no,RA:yes,DO:no -->
-<!-- SECONDARY_1: ReEnable SYSMAIN.bat | Re-Enable SysMain | RE:no,RA:yes,DO:no | RUN:after -->
+<!-- SECONDARY_1: ReEnable SYSMAIN.bat | Restores SysMain service after the fix tool runs | RE:no,RA:yes,DO:no | RUN:after -->
 
 
 # 🛠️ Windows Automatic Fix Tool
