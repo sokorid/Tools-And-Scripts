@@ -91,12 +91,11 @@
 | 📂 Auto-Saving | Places keys directly into your `user/.ssh` folder |
 | 📋 Key Management | List existing keys, view fingerprints, and display public keys |
 
-🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat)
-
 | ℹ️ **Note** |
 | :--- |
 | **Run as a normal user:** No administrator privileges required to manage your SSH keys. |
 <!-- DISPLAY_END -->
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Key_Generator.bat)
 
 **🛠️ The Manual Way:**
 1. Download the `.bat` file.
@@ -129,12 +128,12 @@ curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokori
 | 🧹 **Known_Hosts Fix** | When removing a server, it offers to clean up old fingerprints |
 | 📋 **Quick Connect** | Select a saved alias to launch an SSH session immediately |
 
-🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Connection_Manager.bat)
-
 | ℹ️ **Note** |
 | :--- |
 | **Execution Policy:** This script uses a tiny PowerShell helper for config block deletion. It automatically bypasses execution policies temporarily to ensure it runs seamlessly. |
 <!-- DISPLAY_END -->
+🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/SSH_Connection_Manager.bat)
+
 ### 🛠️ The Manual Way
 1. **Download:** Grab the `SSH_Connection_Manager.bat` file from your Windows repository directory.
 2. **Execute:** Double-click the file to run. No Admin rights or sudo required.
