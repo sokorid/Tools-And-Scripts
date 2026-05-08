@@ -20,6 +20,8 @@
 
 ---
 
+<!-- tag_default: (RE:yes,RA:no,DO:yes) -->
+
 ## 📜 Scripts
 
 <details>
@@ -72,6 +74,8 @@
 
 ---
 </details>
+
+<!-- tag_default: (RE:no,RA:no,DO:no) -->
 
 <details>
 <summary>🔒 SSH_Key_Generator</summary>
