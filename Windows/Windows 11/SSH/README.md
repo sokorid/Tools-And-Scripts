@@ -28,14 +28,14 @@
 <summary>🚀 Open_SSH</summary>
 
 <br>
-
+<!-- DISPLAY_START -->
 `Open_SSH.bat` is a template for standard connections. It sets a clean terminal environment and initiates the connection.
 
 | Feature | Details |
 |--------|---------|
 | 🎨 Visuals | Clears the console and sets a white-on-black theme (`color f`) |
 | ⚡ Speed | Launches the connection immediately without extra flags |
-
+<!-- DISPLAY_END -->
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/Open_SSH.bat)
 
 **🛠️ Setup:**
@@ -53,14 +53,14 @@
 <summary>🔌 Open_SSH_Port</summary>
 
 <br>
-
+<!-- DISPLAY_START -->
 `Open_SSH_Port.bat` is designed for hardened servers where the default SSH port (22) has been changed for security.
 
 | Feature | Details |
 |--------|---------|
 | 🔒 Custom Port | Uses the `-p` flag to target your specific SSH port |
 | 🛠️ Compatibility | Ideal for use with my Linux Hardening scripts |
-
+<!-- DISPLAY_END -->
 🔗 [View Script](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/SSH/Open_SSH_Port.bat)
 
 **🛠️ Setup:**
@@ -81,7 +81,7 @@
 <summary>🔒 SSH_Key_Generator</summary>
 
 <br>
-
+<!-- DISPLAY_START -->
 `SSH_Key_Generator.bat` automates the creation of secure SSH keys and provides a built-in management interface for existing keys.
 
 | Feature | Details |
@@ -96,7 +96,7 @@
 | ℹ️ **Note** |
 | :--- |
 | **Run as a normal user:** No administrator privileges required to manage your SSH keys. |
-
+<!-- DISPLAY_END -->
 
 **🛠️ The Manual Way:**
 1. Download the `.bat` file.
@@ -118,7 +118,7 @@ curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokori
 <summary>🖥️ SSH_Connection_Manager </summary>
 
 <br>
-
+<!-- DISPLAY_START -->
 `SSH_Connection_Manager.bat` is a native Windows utility to manage your local `user/.ssh/config` file and quickly connect to servers without needing to remember IP addresses, custom ports, or usernames.
 
 | Feature | Details |
@@ -134,7 +134,7 @@ curl -s -o %temp%\SSH_Key_Generator.bat https://raw.githubusercontent.com/sokori
 | ℹ️ **Note** |
 | :--- |
 | **Execution Policy:** This script uses a tiny PowerShell helper for config block deletion. It automatically bypasses execution policies temporarily to ensure it runs seamlessly. |
-
+<!-- DISPLAY_END -->
 ### 🛠️ The Manual Way
 1. **Download:** Grab the `SSH_Connection_Manager.bat` file from your Windows repository directory.
 2. **Execute:** Double-click the file to run. No Admin rights or sudo required.
