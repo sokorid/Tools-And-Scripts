@@ -14,7 +14,7 @@
 > This script only runs commands built into Windows; no third-party applications or tools are used. By using this tool, you agree that **sokor** cannot be held liable for any damage caused. If you do not agree, close the script window immediately. **Use at your own risk.**
 
 ---
-
+<!-- DISPLAY_START -->
 ## 📋 Tool Overview
 
 This utility automates system maintenance to resolve common performance issues and update errors.
@@ -27,7 +27,7 @@ This utility automates system maintenance to resolve common performance issues a
 | **🧹 Temp Cleanup** | Purges temporary files to reclaim space and speed up the OS |
 | **🔄 Update Reset** | Resets Windows Update components to fix stuck downloads |
 | **💾 Disk Check** | (Optional) Scans for drive errors and dead sectors (requires reboot) |
-
+<!-- DISPLAY_END -->
 ---
 
 ## 📜 Instructions
@@ -42,9 +42,9 @@ This utility automates system maintenance to resolve common performance issues a
 ---
 
 ## 🔄 Re-Enable SysMain
-
+<!-- DISPLAY_START -->
 If you prefer to have SysMain running after the fix is complete, use this secondary script to restore default settings.
-
+<!-- DISPLAY_END -->
 **Instructions:**
 1. **Download:** [ReEnable SYSMAIN.bat](https://github.com/sokorid/Tools-And-Scripts/blob/main/Windows/Windows%2011/Windows%20Automatic%20Fix%20Tool/ReEnable%20SYSMAIN.bat)
 2. **Run:** Execute the script and follow the on-screen prompts.
