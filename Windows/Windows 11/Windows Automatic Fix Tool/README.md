@@ -1,3 +1,7 @@
+<!-- PRIMARY: Windows Automatic Fix Tool.bat | RE:no,RA:yes,DO:no -->
+<!-- SECONDARY_1: ReEnable SYSMAIN.bat | Re-Enable SysMain | RE:no,RA:yes,DO:no | RUN:after -->
+
+
 # 🛠️ Windows Automatic Fix Tool
 
 ![Platform](https://img.shields.io/badge/OS-Windows%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)
