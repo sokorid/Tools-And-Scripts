@@ -2,7 +2,6 @@
 setlocal EnableDelayedExpansion
 chcp 65001 >nul 2>&1
 title ScriptDownloader
-color f
 :: ============================================================
 :: Author:  sokor
 :: GitHub:  https://github.com/sokorid
@@ -31,10 +30,13 @@ set "TEMP_OUT=%TEMP_DIR%\Sokor_PowerShell_Output.txt"
 set "TEMP_PS=%TEMP_DIR%\Sokor_PowerShell_Scripts.ps1"
 
 :: ============================================================
-:: CREATE TEMP FOLDER
+:: STARTUP: CLEAN SLATE
+:: Wipe all temp files from any previous run before we begin.
+:: This prevents stale PS1/output files from corrupting the session.
 :: ============================================================
+if exist "%TEMP_DIR%"      rd /s /q "%TEMP_DIR%"  >nul 2>&1
 if not exist "%SCRIPT_DIR%" mkdir "%SCRIPT_DIR%"
-if not exist "%TEMP_DIR%"  mkdir "%TEMP_DIR%"
+mkdir "%TEMP_DIR%"
 
 :: ============================================================
 :: BANNER
@@ -43,7 +45,7 @@ cls
 color 0f
 echo.
 echo  =====================================================
-echo    Script Downloader v1.0
+echo    Script Downloader v1.3
 echo  =====================================================
 echo.
 echo    Browse and download scripts from the sokorid
@@ -170,6 +172,9 @@ if "!MENU_CHOICE!"=="" (
     goto :main_menu
 )
 if "!MENU_CHOICE!"=="0" goto :goodbye
+call :check_back "!MENU_CHOICE!" _NAV
+if "!_NAV!"=="MAIN" goto :main_menu
+if "!_NAV!"=="BACK" goto :main_menu
 
 set "VALID=0"
 for /l %%i in (1,1,!SCRIPT_COUNT!) do (
@@ -213,9 +218,9 @@ goto :main_menu
 :handle_standalone
 cls
 echo.
-echo  =================================================================
-echo   !SEL_NAME!
-echo  =================================================================
+echo  =====================================================
+echo    !SEL_NAME!
+echo  =====================================================
 echo.
 
 set "P_FILE="
@@ -269,10 +274,12 @@ for /f "usebackq tokens=1-8 delims=~" %%A in ("%TEMP_OUT%") do (
 )
 
 echo  About this script:
-echo  -----------------------------------------------------------------
+echo  -----------------------------------------------------
 echo.
 call :display_readme_clean
 echo.
+echo  -----------------------------------------------------
+echo    [B] Back   [M] Main Menu
 echo  -----------------------------------------------------
 echo.
 
@@ -291,19 +298,33 @@ if /i "!P_RA!"=="yes" (
     echo    This script must be run as Administrator.
     echo.
     set /p "RA_Q=    Continue? (Y/N): "
+    call :check_back "!RA_Q!" _NAV
+    if "!_NAV!"=="MAIN" goto :main_menu
+    if "!_NAV!"=="BACK" goto :main_menu
     call :check_yes "!RA_Q!" RA_OK
     if not "!RA_OK!"=="1" ( timeout /t 2 >nul & goto :main_menu )
 )
 
 set /p "DL_Q=    Download !P_FILE!? (Y/N): "
+call :check_back "!DL_Q!" _NAV
+if "!_NAV!"=="MAIN" goto :main_menu
+if "!_NAV!"=="BACK" goto :main_menu
 call :check_yes "!DL_Q!" DL_OK
 if not "!DL_OK!"=="1" ( timeout /t 2 >nul & goto :main_menu )
 
 call :choose_location "!P_DO!" P_LOC
 if "!P_LOC!"=="CANCEL" goto :main_menu
+if "!P_LOC!"=="BACK"   goto :main_menu
+if "!P_LOC!"=="MAIN"   goto :main_menu
 
 set "P_URL=!RAW_BASE!/!SEL_PATH: =%%20!/!P_FILE: =%%20!"
 set "P_DEST=!P_LOC!\!P_FILE!"
+
+call :check_collision "!P_DEST!" "!P_FILE!" P_DEST_FINAL
+if "!P_DEST_FINAL!"=="CANCEL" goto :main_menu
+if "!P_DEST_FINAL!"=="BACK"   goto :main_menu
+if "!P_DEST_FINAL!"=="MAIN"   goto :main_menu
+set "P_DEST=!P_DEST_FINAL!"
 
 echo.
 echo    [~] Downloading !P_FILE!...
@@ -352,29 +373,34 @@ echo         if ($f -match "RE:(yes|no)") { $dRE = $matches[1] } >> "%TEMP_PS%"
 echo         if ($f -match "RA:(yes|no)") { $dRA = $matches[1] } >> "%TEMP_PS%"
 echo         if ($f -match "DO:(yes|no)") { $dDO = $matches[1] } >> "%TEMP_PS%"
 echo     } >> "%TEMP_PS%"
-echo     if ($l -match "<details>") { $in=$true; $cRE=$dRE; $cRA=$dRA; $cDO=$dDO; $cn="" } >> "%TEMP_PS%"
+echo     if ($l -match "<details>") { $in=$true; $cRE=$dRE; $cRA=$dRA; $cDO=$dDO; $cn=""; $cFILE="" } >> "%TEMP_PS%"
 echo     if ($in) { >> "%TEMP_PS%"
 echo         if ($cn -eq "" -and $l -match "<summary>(.+?)</summary>") { $cn=($matches[1] -replace "[^a-zA-Z0-9\s_\-\.]","").Trim() } >> "%TEMP_PS%"
+echo         if ($l -match "<!--\s*FILE:\s*([^-]+\.bat)\s*-->") { $cFILE = $matches[1].Trim() } >> "%TEMP_PS%"
 echo         if ($l -match "<!--\s*tag:\s*\(([^)]+)\)\s*-->") { >> "%TEMP_PS%"
 echo             $f = $matches[1] >> "%TEMP_PS%"
 echo             if ($f -match "RE:(yes|no)") { $cRE = $matches[1] } >> "%TEMP_PS%"
 echo             if ($f -match "RA:(yes|no)") { $cRA = $matches[1] } >> "%TEMP_PS%"
 echo             if ($f -match "DO:(yes|no)") { $cDO = $matches[1] } >> "%TEMP_PS%"
 echo         } >> "%TEMP_PS%"
-echo         if ($l -match "</details>" -and $cn -ne "") { $res += ($cn+"~"+$cRE+"~"+$cRA+"~"+$cDO); $in=$false } >> "%TEMP_PS%"
+echo         if ($l -match "</details>" -and $cn -ne "") { >> "%TEMP_PS%"
+echo             $fn = if ($cFILE -ne "") { $cFILE } else { $cn } >> "%TEMP_PS%"
+echo             $res += ($cn+"~"+$cRE+"~"+$cRA+"~"+$cDO+"~"+$fn); $in=$false >> "%TEMP_PS%"
+echo         } >> "%TEMP_PS%"
 echo     } >> "%TEMP_PS%"
 echo } >> "%TEMP_PS%"
 echo foreach ($r in $res) { Write-Output $r } >> "%TEMP_PS%"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP_PS%" > "%TEMP_OUT%" 2>nul
 endlocal
 
-for /f "usebackq tokens=1-4 delims=~" %%A in ("%TEMP_OUT%") do (
+for /f "usebackq tokens=1-5 delims=~" %%A in ("%TEMP_OUT%") do (
     set /a MULTI_COUNT+=1
     set "MC=!MULTI_COUNT!"
     set "M_NAME_!MC!=%%A"
     set "M_RE_!MC!=%%B"
     set "M_RA_!MC!=%%C"
     set "M_DO_!MC!=%%D"
+    set "M_FILE_!MC!=%%E"
     echo    [!MULTI_COUNT!]  %%A
 )
 
@@ -393,6 +419,9 @@ set /p "MC_CHOICE=    Select a script: "
 
 if "!MC_CHOICE!"=="" ( timeout /t 2 >nul & goto :handle_multi )
 if "!MC_CHOICE!"=="0" goto :main_menu
+call :check_back "!MC_CHOICE!" _NAV
+if "!_NAV!"=="MAIN" goto :main_menu
+if "!_NAV!"=="BACK" goto :main_menu
 
 set "MV=0"
 for /l %%i in (1,1,!MULTI_COUNT!) do if "!MC_CHOICE!"=="%%i" set "MV=1"
@@ -402,6 +431,7 @@ set "MS_NAME=!M_NAME_%MC_CHOICE%!"
 set "MS_RE=!M_RE_%MC_CHOICE%!"
 set "MS_RA=!M_RA_%MC_CHOICE%!"
 set "MS_DO=!M_DO_%MC_CHOICE%!"
+set "MS_FILE_RAW=!M_FILE_%MC_CHOICE%!"
 
 cls
 echo.
@@ -447,6 +477,8 @@ endlocal
 
 echo.
 echo  -----------------------------------------------------
+echo    [B] Back   [M] Main Menu
+echo  -----------------------------------------------------
 echo.
 
 if /i "!MS_RA!"=="yes" (
@@ -457,23 +489,38 @@ if /i "!MS_RA!"=="yes" (
     echo    This script must be run as Administrator.
     echo.
     set /p "MRA_Q=    Continue? (Y/N): "
+    call :check_back "!MRA_Q!" _NAV
+    if "!_NAV!"=="MAIN" goto :main_menu
+    if "!_NAV!"=="BACK" goto :handle_multi
     call :check_yes "!MRA_Q!" MRA_OK
     if not "!MRA_OK!"=="1" ( timeout /t 2 >nul & goto :handle_multi )
 )
 
 set /p "MDL_Q=    Download !MS_NAME!? (Y/N): "
+call :check_back "!MDL_Q!" _NAV
+if "!_NAV!"=="MAIN" goto :main_menu
+if "!_NAV!"=="BACK" goto :handle_multi
 call :check_yes "!MDL_Q!" MDL_OK
 if not "!MDL_OK!"=="1" ( timeout /t 2 >nul & goto :handle_multi )
 
 call :choose_location "!MS_DO!" MS_LOC
 if "!MS_LOC!"=="CANCEL" goto :handle_multi
+if "!MS_LOC!"=="BACK"   goto :handle_multi
+if "!MS_LOC!"=="MAIN"   goto :main_menu
 
-set "MS_FILE=!MS_NAME!"
+:: Resolve filename: use FILE tag value if present, else derive from name
+set "MS_FILE=!MS_FILE_RAW!"
 echo !MS_FILE! | findstr /i "\.bat" >nul 2>&1
 if errorlevel 1 set "MS_FILE=!MS_FILE!.bat"
 
 set "MS_URL=!RAW_BASE!/!SEL_PATH: =%%20!/!MS_FILE: =%%20!"
 set "MS_DEST=!MS_LOC!\!MS_FILE!"
+
+call :check_collision "!MS_DEST!" "!MS_FILE!" MS_DEST_FINAL
+if "!MS_DEST_FINAL!"=="CANCEL" goto :handle_multi
+if "!MS_DEST_FINAL!"=="BACK"   goto :handle_multi
+if "!MS_DEST_FINAL!"=="MAIN"   goto :main_menu
+set "MS_DEST=!MS_DEST_FINAL!"
 
 echo.
 echo    [~] Downloading !MS_FILE!...
@@ -494,6 +541,298 @@ goto :handle_multi
 set "%~2=0"
 if /i "%~1"=="y"   set "%~2=1"
 if /i "%~1"=="yes" set "%~2=1"
+goto :eof
+
+:: ============================================================
+:: SUBROUTINE: CHECK BACK / MAIN MENU NAV
+:: Sets %~2 to BACK, MAIN, or NONE
+:: ============================================================
+:check_back
+set "%~2=NONE"
+if /i "%~1"=="b"         set "%~2=BACK"
+if /i "%~1"=="back"      set "%~2=BACK"
+if /i "%~1"=="m"         set "%~2=MAIN"
+if /i "%~1"=="main"      set "%~2=MAIN"
+if /i "%~1"=="main menu" set "%~2=MAIN"
+goto :eof
+
+:: ============================================================
+:: SUBROUTINE: CHECK COLLISION
+:: Usage: call :check_collision "full\path\file.bat" "file.bat" RESULT_VAR
+:: Returns resolved destination path, or CANCEL/BACK/MAIN
+:: ============================================================
+:check_collision
+set "_CC_DEST=%~1"
+set "_CC_FILE=%~2"
+set "%~3=!_CC_DEST!"
+
+if not exist "!_CC_DEST!" goto :eof
+
+:collision_prompt
+echo.
+echo  -----------------------------------------------------
+echo    [!] FILE ALREADY EXISTS
+echo  -----------------------------------------------------
+echo.
+echo    A file named !_CC_FILE! already exists at this location.
+echo.
+echo    [1]  Overwrite  (replaces the existing file)
+echo    [2]  Rename     (saves with a number suffix)
+echo    [0]  Cancel
+echo.
+echo  -----------------------------------------------------
+echo.
+set "COL_Q="
+set /p "COL_Q=    Choice: "
+
+if "!COL_Q!"=="" (
+    echo    [!] Please make a selection.
+    timeout /t 2 >nul
+    goto :collision_prompt
+)
+
+call :check_back "!COL_Q!" _NAV
+if "!_NAV!"=="MAIN" ( set "%~3=MAIN" & goto :eof )
+if "!_NAV!"=="BACK" ( set "%~3=BACK" & goto :eof )
+
+if "!COL_Q!"=="0" ( set "%~3=CANCEL" & goto :eof )
+
+if "!COL_Q!"=="1" (
+    echo    [i] Overwriting existing file.
+    set "%~3=!_CC_DEST!"
+    goto :eof
+)
+
+if "!COL_Q!"=="2" (
+    set "_BASE=!_CC_FILE!"
+    set "_BASE=!_BASE:.bat=!"
+    for %%F in ("!_CC_DEST!") do set "_DIR=%%~dpF"
+    set "_IDX=1"
+    :collision_loop
+    set "_NEWDEST=!_DIR!!_BASE! !_IDX!.bat"
+    if exist "!_NEWDEST!" (
+        set /a _IDX+=1
+        goto :collision_loop
+    )
+    echo    [i] Saving as: !_BASE! !_IDX!.bat
+    set "%~3=!_NEWDEST!"
+    goto :eof
+)
+
+echo    [!] Invalid choice.
+timeout /t 2 >nul
+goto :collision_prompt
+
+:: ============================================================
+:: SUBROUTINE: CHOOSE SAVE LOCATION
+:: ============================================================
+:choose_location
+set "%~2=CANCEL"
+if /i "%~1"=="yes" (
+    echo    [i] Desktop only - saving to your Desktop.
+    set "%~2=%USERPROFILE%\Desktop"
+    goto :eof
+)
+echo  -----------------------------------------------------
+echo    SAVE LOCATION
+echo  -----------------------------------------------------
+echo.
+echo    [1]  Desktop
+echo    [2]  Temp  ^(saved to Sokor_Script_Downloader, deleted on exit^)
+echo    [0]  Cancel
+echo.
+echo  -----------------------------------------------------
+echo.
+set /p "LOC=    Enter choice: "
+
+call :check_back "!LOC!" _NAV
+if "!_NAV!"=="MAIN" ( set "%~2=MAIN" & goto :eof )
+if "!_NAV!"=="BACK" ( set "%~2=BACK" & goto :eof )
+
+if "!LOC!"=="1" ( set "%~2=%USERPROFILE%\Desktop" & goto :eof )
+if "!LOC!"=="2" ( set "%~2=%SCRIPT_DIR%"          & goto :eof )
+if "!LOC!"=="0" goto :eof
+echo    [!] Invalid choice. Defaulting to Desktop.
+set "%~2=%USERPROFILE%\Desktop"
+goto :eof
+
+:: ============================================================
+:: SUBROUTINE: EXECUTE FLOW
+:: ============================================================
+:execute_flow
+set "_F=%~1"
+set "_P=%~2"
+set "_RA=%~3"
+set "_RE=%~4"
+set "_L=%~5"
+
+if /i "!_RE!"=="yes" (
+    echo  -----------------------------------------------------
+    echo    [!] CONFIGURATION REQUIRED
+    echo  -----------------------------------------------------
+    echo.
+    echo    This script must be edited before use.
+    echo    Open the file, make your changes, then run manually.
+    echo.
+    echo    Saved to: !_P!
+    echo.
+    goto :eof
+)
+
+set /p "EX_Q=    Execute !_F! now? (Y/N): "
+call :check_back "!EX_Q!" _NAV
+if "!_NAV!"=="MAIN" goto :main_menu
+if "!_NAV!"=="BACK" goto :eof
+call :check_yes "!EX_Q!" EX_OK
+if not "!EX_OK!"=="1" (
+    echo    [i] Saved to: !_P!
+    goto :eof
+)
+
+if /i "!_RA!"=="yes" (
+    set /p "ADM_Q=    Launch as Administrator? (Y/N): "
+    call :check_back "!ADM_Q!" _NAV
+    if "!_NAV!"=="MAIN" goto :main_menu
+    if "!_NAV!"=="BACK" goto :eof
+    call :check_yes "!ADM_Q!" ADM_OK
+    if "!ADM_OK!"=="1" (
+        echo    [~] Requesting UAC elevation...
+        powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"%_P%\"' -Verb RunAs -Wait"
+    ) else (
+        echo    [i] Right-click the file and select Run as Administrator
+        echo        Location: !_P!
+    )
+) else (
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"%_P%\" & pause' -Wait"
+)
+
+if /i "!_L!"=="%SCRIPT_DIR%" if exist "!_P!" (
+    del /f /q "!_P!" >nul 2>&1
+    echo    [+] Temp file cleaned up.
+)
+goto :eof
+
+:: ============================================================
+:: SUBROUTINE: HANDLE SECONDARIES
+:: ============================================================
+:handle_secondaries
+set "_SHP=%~1"
+if !SEC_COUNT! EQU 0 goto :eof
+
+echo.
+echo  =====================================================
+echo    Optional Companion Files
+echo  =====================================================
+echo.
+for /l %%i in (1,1,!SEC_COUNT!) do (
+    echo    [%%i] !SEC_FILE_%%i!
+    echo         !SEC_DESC_%%i!
+    echo.
+)
+echo  -----------------------------------------------------
+echo    [A]  Download all
+echo    [N]  Skip all
+echo    [B]  Back   [M]  Main Menu
+echo  -----------------------------------------------------
+echo.
+set /p "SC_Q=    Choice: "
+
+call :check_back "!SC_Q!" _NAV
+if "!_NAV!"=="MAIN" goto :main_menu
+if "!_NAV!"=="BACK" goto :eof
+
+if /i "!SC_Q!"=="n"  goto :eof
+if /i "!SC_Q!"=="no" goto :eof
+
+for /l %%i in (1,1,!SEC_COUNT!) do set "SDLO_%%i=0"
+
+if /i "!SC_Q!"=="a" (
+    for /l %%i in (1,1,!SEC_COUNT!) do set "SDLO_%%i=1"
+) else (
+    set "SV=0"
+    for /l %%i in (1,1,!SEC_COUNT!) do if "!SC_Q!"=="%%i" ( set "SDLO_%%i=1" & set "SV=1" )
+    if "!SV!"=="0" ( echo    [!] Invalid. Skipping. & goto :eof )
+)
+
+for /l %%i in (1,1,!SEC_COUNT!) do (
+    if "!SDLO_%%i!"=="1" (
+        echo.
+        echo  -- !SEC_FILE_%%i! --
+        call :choose_location "!SEC_DO_FLAG_%%i!" SLOC_%%i
+        if "!SLOC_%%i!"=="CANCEL" (
+            set "SDLO_%%i=0"
+        ) else if "!SLOC_%%i!"=="BACK" (
+            set "SDLO_%%i=0"
+        ) else if "!SLOC_%%i!"=="MAIN" (
+            set "SDLO_%%i=0"
+            goto :main_menu
+        ) else (
+            set "SU=!RAW_BASE!/!_SHP: =%%20!/!SEC_FILE_%%i: =%%20!"
+            set "SDEST_%%i=!SLOC_%%i!\!SEC_FILE_%%i!"
+            call :check_collision "!SDEST_%%i!" "!SEC_FILE_%%i!" SDEST_%%i
+            if "!SDEST_%%i!"=="CANCEL" (
+                set "SDLO_%%i=0"
+            ) else if "!SDEST_%%i!"=="BACK" (
+                set "SDLO_%%i=0"
+            ) else if "!SDEST_%%i!"=="MAIN" (
+                set "SDLO_%%i=0"
+                goto :main_menu
+            ) else (
+                curl -s -f -o "!SDEST_%%i!" "!SU!"
+                if errorlevel 1 (
+                    echo    [X] Failed: !SEC_FILE_%%i!
+                    set "SDLO_%%i=0"
+                ) else (
+                    echo    [+] !SDEST_%%i!
+                    if /i "!SEC_RUN_%%i!"=="manual" (
+                        echo    [i] Run manually: !SDEST_%%i!
+                        set "SDLO_%%i=0"
+                    )
+                    if /i "!SEC_RUN_%%i!"=="with" (
+                        set /p "WR_Q=    Launch !SEC_FILE_%%i! alongside primary? (Y/N): "
+                        call :check_yes "!WR_Q!" WR_OK
+                        if "!WR_OK!"=="1" (
+                            if /i "!SEC_RA_%%i!"=="yes" (
+                                start powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"%SDEST_%%i%\"' -Verb RunAs"
+                            ) else (
+                                start cmd /c "\"%SDEST_%%i%\" & pause"
+                            )
+                        )
+                        set "SDLO_%%i=0"
+                    )
+                )
+            )
+        )
+    )
+)
+goto :eof
+
+:: ============================================================
+:: SUBROUTINE: RUN AFTER SECONDARIES
+:: ============================================================
+:run_after_secondaries
+for /l %%i in (1,1,!SEC_COUNT!) do (
+    if "!SDLO_%%i!"=="1" if /i "!SEC_RUN_%%i!"=="after" (
+        echo.
+        echo  -----------------------------------------------------
+        echo    [i] !SEC_FILE_%%i! - !SEC_DESC_%%i!
+        echo.
+        set /p "AR_Q=    Run !SEC_FILE_%%i! now? (Y/N): "
+        call :check_back "!AR_Q!" _NAV
+        if "!_NAV!"=="MAIN" goto :main_menu
+        if not "!_NAV!"=="BACK" (
+            call :check_yes "!AR_Q!" AR_OK
+            if "!AR_OK!"=="1" (
+                if /i "!SEC_RA_%%i!"=="yes" (
+                    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"%SDEST_%%i%\"' -Verb RunAs -Wait"
+                ) else (
+                    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"%SDEST_%%i%\" & pause' -Wait"
+                )
+                if /i "!SLOC_%%i!"=="%SCRIPT_DIR%" if exist "!SDEST_%%i!" del /f /q "!SDEST_%%i!" >nul 2>&1
+            )
+        )
+    )
+)
 goto :eof
 
 :: ============================================================
@@ -537,183 +876,6 @@ echo     if (-not $found) { Write-Host "  No preview available." } >> "%TEMP_PS%
 echo } >> "%TEMP_PS%"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP_PS%"
 endlocal
-goto :eof
-
-:: ============================================================
-:: SUBROUTINE: CHOOSE SAVE LOCATION
-:: ============================================================
-:choose_location
-set "%~2=CANCEL"
-if /i "%~1"=="yes" (
-    echo    [i] Desktop only - saving to your Desktop.
-    set "%~2=%USERPROFILE%\Desktop"
-    goto :eof
-)
-echo  -----------------------------------------------------
-echo    SAVE LOCATION
-echo  -----------------------------------------------------
-echo.
-echo    [1]  Desktop
-echo    [2]  Temp  ^(saved to Sokor_Script_Downloader, deleted on exit^)
-echo    [0]  Cancel
-echo.
-echo  -----------------------------------------------------
-echo.
-set /p "LOC=    Enter choice: "
-if "!LOC!"=="1" ( set "%~2=%USERPROFILE%\Desktop" & goto :eof )
-if "!LOC!"=="2" ( set "%~2=%SCRIPT_DIR%"          & goto :eof )
-if "!LOC!"=="0" goto :eof
-echo    [!] Invalid choice. Defaulting to Desktop.
-set "%~2=%USERPROFILE%\Desktop"
-goto :eof
-
-:: ============================================================
-:: SUBROUTINE: EXECUTE FLOW
-:: ============================================================
-:execute_flow
-set "_F=%~1"
-set "_P=%~2"
-set "_RA=%~3"
-set "_RE=%~4"
-set "_L=%~5"
-
-if /i "!_RE!"=="yes" (
-    echo  -----------------------------------------------------
-    echo    [!] CONFIGURATION REQUIRED
-    echo  -----------------------------------------------------
-    echo.
-    echo    This script must be edited before use.
-    echo    Open the file, make your changes, then run manually.
-    echo.
-    echo    Saved to: !_P!
-    echo.
-    goto :eof
-)
-
-set /p "EX_Q=    Execute !_F! now? (Y/N): "
-call :check_yes "!EX_Q!" EX_OK
-if not "!EX_OK!"=="1" (
-    echo    [i] Saved to: !_P!
-    goto :eof
-)
-
-if /i "!_RA!"=="yes" (
-    set /p "ADM_Q=    Launch as Administrator? (Y/N): "
-    call :check_yes "!ADM_Q!" ADM_OK
-    if "!ADM_OK!"=="1" (
-        echo    [~] Requesting UAC elevation...
-        powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c call \"%_P%\" & pause' -Verb RunAs -Wait"
-    ) else (
-        echo  [i] Right-click the file and select Run as Administrator
-        echo      Location: !_P!
-    )
-) else (
-    start /wait cmd /c "call "!_P!" & pause"
-)
-
-if /i "!_L!"=="%SCRIPT_DIR%" if exist "!_P!" (
-    del /f /q "!_P!" >nul 2>&1
-    echo    [+] Temp file cleaned up.
-)
-goto :eof
-
-:: ============================================================
-:: SUBROUTINE: HANDLE SECONDARIES
-:: ============================================================
-:handle_secondaries
-set "_SHP=%~1"
-if !SEC_COUNT! EQU 0 goto :eof
-
-echo.
-echo  =================================================================
-echo   Optional Companion Files
-echo  =================================================================
-echo.
-for /l %%i in (1,1,!SEC_COUNT!) do (
-    echo    [%%i] !SEC_FILE_%%i!
-    echo         !SEC_DESC_%%i!
-    echo.
-)
-echo  -----------------------------------------------------
-echo    [A]  Download all
-echo    [N]  Skip all
-echo  -----------------------------------------------------
-echo.
-set /p "SC_Q=    Choice: "
-
-if /i "!SC_Q!"=="n"  goto :eof
-if /i "!SC_Q!"=="no" goto :eof
-
-for /l %%i in (1,1,!SEC_COUNT!) do set "SDLO_%%i=0"
-
-if /i "!SC_Q!"=="a" (
-    for /l %%i in (1,1,!SEC_COUNT!) do set "SDLO_%%i=1"
-) else (
-    set "SV=0"
-    for /l %%i in (1,1,!SEC_COUNT!) do if "!SC_Q!"=="%%i" ( set "SDLO_%%i=1" & set "SV=1" )
-    if "!SV!"=="0" ( echo  [!] Invalid. Skipping. & goto :eof )
-)
-
-for /l %%i in (1,1,!SEC_COUNT!) do (
-    if "!SDLO_%%i!"=="1" (
-        echo.
-        echo  -- !SEC_FILE_%%i! --
-        call :choose_location "!SEC_DO_FLAG_%%i!" SLOC_%%i
-        if "!SLOC_%%i!"=="CANCEL" (
-            set "SDLO_%%i=0"
-        ) else (
-            set "SU=!RAW_BASE!/!_SHP: =%%20!/!SEC_FILE_%%i: =%%20!"
-            set "SDEST_%%i=!SLOC_%%i!\!SEC_FILE_%%i!"
-            curl -s -f -o "!SDEST_%%i!" "!SU!"
-            if errorlevel 1 (
-                echo  [ERROR] Failed: !SEC_FILE_%%i!
-                set "SDLO_%%i=0"
-            ) else (
-                echo  [OK] !SDEST_%%i!
-                if /i "!SEC_RUN_%%i!"=="manual" (
-                    echo  [i] Run manually: !SDEST_%%i!
-                    set "SDLO_%%i=0"
-                )
-                if /i "!SEC_RUN_%%i!"=="with" (
-                    set /p "WR_Q= Launch !SEC_FILE_%%i! alongside primary? (Y/N): "
-                    call :check_yes "!WR_Q!" WR_OK
-                    if "!WR_OK!"=="1" (
-                        if /i "!SEC_RA_%%i!"=="yes" (
-                            start powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c call \"!SDEST_%%i!\" & pause' -Verb RunAs"
-                        ) else (
-                            start cmd /c "call \"!SDEST_%%i!\" & pause"
-                        )
-                    )
-                    set "SDLO_%%i=0"
-                )
-            )
-        )
-    )
-)
-goto :eof
-
-:: ============================================================
-:: SUBROUTINE: RUN AFTER SECONDARIES
-:: ============================================================
-:run_after_secondaries
-for /l %%i in (1,1,!SEC_COUNT!) do (
-    if "!SDLO_%%i!"=="1" if /i "!SEC_RUN_%%i!"=="after" (
-        echo.
-        echo  -----------------------------------------------------------------
-        echo  [i] !SEC_FILE_%%i! - !SEC_DESC_%%i!
-        echo.
-        set /p "AR_Q= Run !SEC_FILE_%%i! now? (Y/N): "
-        call :check_yes "!AR_Q!" AR_OK
-        if "!AR_OK!"=="1" (
-            if /i "!SEC_RA_%%i!"=="yes" (
-                powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c call \"!SDEST_%%i!\" & pause' -Verb RunAs -Wait"
-            ) else (
-                start /wait cmd /c "call \"!SDEST_%%i!\" & pause"
-            )
-            if /i "!SLOC_%%i!"=="%SCRIPT_DIR%" if exist "!SDEST_%%i!" del /f /q "!SDEST_%%i!" >nul 2>&1
-        )
-    )
-)
 goto :eof
 
 :: ============================================================
