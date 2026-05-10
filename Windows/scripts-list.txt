@@ -1,6 +1,4 @@
-# just testing something
-# you don't see this smiley face
-
+# Registry file for ScriptDownloader.bat — defines which scripts are available to browse and download.
 
 Windows Automatic Fix Tool | standalone | Windows/Windows 11/Windows Automatic Fix Tool | Windows Automatic Fix Tool.bat
 SSH Scripts | multi | Windows/Windows 11/SSH | NONE
