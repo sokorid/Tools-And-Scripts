@@ -1,3 +1,5 @@
+<!-- PRIMARY: ScriptDownloader.bat | RE:no,RA:no,DO:yes -->
+
 # ⬇️ ScriptDownloader
 
 ![Platform](https://img.shields.io/badge/OS-Windows%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)
@@ -12,7 +14,7 @@
 ---
 
 ## 📋 Overview
-
+<!-- DISPLAY_START -->
 ScriptDownloader is a menu-driven `.bat` utility that lets you browse, preview, and download sokor Windows 11 scripts directly from GitHub — without needing to visit the repository manually.
 
 | Feature | Description |
@@ -22,7 +24,7 @@ ScriptDownloader is a menu-driven `.bat` utility that lets you browse, preview, 
 | **📥 Download** | Saves scripts to your Desktop or a temporary folder |
 | **▶️ Execute** | Optionally runs the script immediately after downloading |
 | **🧹 Cleanup** | Automatically removes temporary files on exit |
-
+<!-- DISPLAY_END -->
 ---
 
 ## ⚙️ Requirements
