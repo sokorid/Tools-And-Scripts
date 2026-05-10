@@ -2,3 +2,4 @@
 
 Windows Automatic Fix Tool | standalone | Windows/Windows 11/Windows Automatic Fix Tool | Windows Automatic Fix Tool.bat
 SSH Scripts | multi | Windows/Windows 11/SSH | NONE
+ScriptDownloader | standalone | Windows/Windows 11/ScriptDownloader | ScriptDownloader.bat
