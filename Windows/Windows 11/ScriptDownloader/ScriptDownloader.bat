@@ -37,15 +37,46 @@ set "TEMP_PS=%TEMP_DIR%\Sokor_PowerShell_Scripts.ps1"
 if exist "%TEMP_DIR%"      rd /s /q "%TEMP_DIR%"  >nul 2>&1
 if not exist "%SCRIPT_DIR%" mkdir "%SCRIPT_DIR%"
 mkdir "%TEMP_DIR%"
-
 :: ============================================================
-:: BANNER
+:: ELEVATION CHECK
 :: ============================================================
+net session >nul 2>&1
+if not errorlevel 1 goto :banner
 cls
 color 0f
 echo.
 echo  =====================================================
-echo    Script Downloader v1.3
+echo    Script Downloader v1.5
+echo  =====================================================
+echo.
+echo  -----------------------------------------------------
+echo    [i] ADMINISTRATOR RECOMMENDED
+echo  -----------------------------------------------------
+echo.
+echo    This script works without Administrator, but
+echo    running as Administrator is highly recommended
+echo    for the most reliable experience.
+echo.
+echo  -----------------------------------------------------
+echo    [1]  Relaunch as Administrator  (recommended)
+echo    [2]  Continue without elevation
+echo  -----------------------------------------------------
+echo.
+set /p "ELEV_Q=    Choice: "
+if "!ELEV_Q!"=="1" (
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"%~f0\"' -Verb RunAs"
+    exit /b 0
+)
+
+:banner
+cls
+color 0f
+:: ============================================================
+:: BANNER
+:: ============================================================
+echo.
+echo  =====================================================
+echo    Script Downloader v1.5
 echo  =====================================================
 echo.
 echo    Browse and download scripts from the sokorid
