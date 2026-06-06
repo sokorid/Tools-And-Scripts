@@ -1,0 +1,9 @@
+# Windows
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
