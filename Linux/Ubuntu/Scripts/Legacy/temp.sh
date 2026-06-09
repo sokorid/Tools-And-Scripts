@@ -10,10 +10,6 @@
 #  with individual or full-sequence run options.
 #
 # ============================================================
-
-# NOTE: We intentionally do NOT use set -e here so that
-# interactive sub-scripts that exit 0 implicitly don't get
-# falsely flagged as failures by the shell.
 set -uo pipefail
 
 # ============================================================
@@ -77,8 +73,6 @@ confirm_run() {
     read -r
 }
 
-# Runs a remote script. Uses || true so an implicit exit-0
-# sub-script never gets mis-reported as a failure.
 run_remote_script() {
     local name="$1"
     local url="$2"
@@ -94,7 +88,6 @@ run_remote_script() {
 
     local tmp
     tmp=$(mktemp /tmp/setup_script.XXXXXX.sh)
-    # Download first so we can check the fetch itself
     if ! wget -qLO "${tmp}" "${url}"; then
         echo -e "  ${RED}[X]${RESET}  Failed to download ${name}. Check your internet connection."
         rm -f "${tmp}"
@@ -110,8 +103,6 @@ run_remote_script() {
     if [[ ${exit_code} -eq 0 ]]; then
         echo -e "  ${GREEN}[+]${RESET}  ${name} completed successfully."
     else
-        # exit code 1 from Clear Port 53 means user chose 'Aborted' — treat as success
-        # Only truly fail on codes > 1 which indicate real errors
         if [[ ${exit_code} -eq 1 ]]; then
             echo -e "  ${YELLOW}[!]${RESET}  ${name} exited early (user aborted or no action needed)."
         else
@@ -157,6 +148,7 @@ $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
     echo -e "  ${YELLOW}[~]${RESET} [3/3] Verifying with hello-world..."
     echo
     if docker run hello-world; then
+        usermod -aG docker "${SUDO_USER:-$USER}"
         echo
         print_divider
         echo -e "  ${GREEN}[+]${RESET}  Docker installed and verified successfully."
